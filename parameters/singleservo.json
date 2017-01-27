@@ -1,0 +1,20 @@
+{
+	"servos":{
+		"head_tilt": {
+			"servo_index": 3,
+			"max_speed": 90,
+			"max_angle": 180,
+			"min_angle": 0,
+			"zero_offset": 30,
+			"resting_angle": 90,
+			"precision_threshold_angle":10
+
+		}
+	},
+	"params":
+	{
+		"angle_update_rate_hz": 30,
+		"pwm_frequency": 100
+
+	}
+}
