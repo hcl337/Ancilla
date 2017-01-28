@@ -6,6 +6,7 @@ from Vision import Vision
 from Expression import Expression
 from Speech import Speech
 from Hearing import Hearing
+from Reasoning import Reasoning
 
 # Set the minimum level we log. DEBUG will show everything.
 # INFO will show a lot less.
@@ -17,15 +18,37 @@ logging.basicConfig(level=logging.DEBUG)
 # so we want to find errors first
 ################################################################################
 
-movement = Movement( "../parameters/servos.json" )
-
-vision = Vision( )
-
-hearing = Hearing( )
-
+startTime = time.time( )
 speech = Speech( )
+speech.enable( )
+#speech.say( "Booting AC-3 Operating system." )
+#speech.say( "Speech" )
+
+movement = Movement( "../parameters/servos.json" )
+movement.enable( )
+#speech.say( "Movement")
 
 expression = Expression( )
+expression.enable( )
+#speech.say( "Expressions")
+
+vision = Vision( )
+vision.enable( )
+#speech.say( "Vision")
+
+hearing = Hearing( )
+#speech.say( "Hearing")
+
+reasoning = Reasoning( speech, movement, expression, vision, hearing )
+hearing.subscribe( reasoning.heardPhrase )
+#speech.say( "Reasoning")
+
+while( speech.isTalking() ):
+	time.sleep(1)
+
+endTime = time.time()
+speech.say( "AC-3 Ready for duty.")
+hearing.enable( )
 
 
 
@@ -33,28 +56,12 @@ expression = Expression( )
 # Turn on all of the systems because initialization was complete
 ################################################################################
 
-speech.enable( )
 
-speech.say( "Waking up now")
-
-movement.enable( )
-
-speech.say( "Activated movement")
-
-expression.enable( )
-
-speech.say( "Activated expression")
-
-vision.enable( )
-
-speech.say( "Activated vision")
-
-speech.say( "Initialization Complete")
-
-
+#time.sleep(60)
 ################################################################################
 # Run the sysetm
 ################################################################################
+
 
 movement.setServoAngle('head_tilt', 163, 20)
 time.sleep(6)

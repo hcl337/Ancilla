@@ -5,32 +5,96 @@ import json
 import time
 import os
 import copy
+from Queue import Queue
 from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
 if 'arm' in os.name:
-    import Adafruit_PCA9685
+    from speech.RaspberryPiSpeech import RaspberryPiSpeech
     isRaspberryPi = True
 else:
+    from speech.MacSpeech import MacSpeech
     isRaspberryPi = False
+
 
 class Speech:
     '''
-    The main class which represents the output of the system
+    The main class which represents speech. It is different on Mac, Raspberry Pi,
+    etc so subclassing to be effective
 
     '''
 
     isEnabled = False
 
+    # This will hold all of our phrases so they are said in order
+    phraseQueue = Queue()
+
+    # This holds the reference to our speech engine for Mac, Raspberry Pi, etc
+    engine = None
+
+
     def __init__(self):
     	logger.info("Creating Speech...")
 
+        if isRaspberryPi:
+            self.engine = RaspberryPiSpeech()
+        else:
+            self.engine = MacSpeech()
+
+
+
     def enable( self ):
-    	isEnabled = True
+
+        logger.info( "Enabling speech")
+
+        if self.isEnabled:
+            raise Exception("Speeking is already enabled")
+
+        self.isEnabled = True
+
+        speechThread = Thread(target=self.__speechLoop)
+        # Make sure it dies if the whole app dies
+        speechThread.setDaemon(True)
+        # Need to actually start it running where it calls the update function
+        speechThread.start()
+
+
 
     def disable( self ):
-    	isEnabled = False
+    	self.isEnabled = False
 
-    def say( words ):
-        logger.debug( "Going to say: " + words)
+
+
+    def say( self, words ):
+        logger.debug( "Adding sentence to queue: " + words)
+        # Create our thread
+        self.phraseQueue.put( words )
+
+
+
+    def isTalking( self ):
+        return self.phraseQueue.qsize() > 0
+
+
+
+    def __speechLoop( self ):
+
+        while self.isEnabled:
+
+            # While there is nothing, just sleep
+            if  self.phraseQueue.qsize() == 0:
+                time.sleep(0.25)
+                continue
+
+            phrase = self.phraseQueue.get( 0 )
+
+            logger.debug( "Saying Sentence from Queue: " + phrase)
+
+            self.engine.sayAndWait(phrase)
+
+            logger.debug("Completed phrase: " + phrase )
+
+            # Add in a human wait inbetween ideas
+            #time.sleep( 0.2)
+

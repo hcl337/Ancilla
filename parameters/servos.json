@@ -30,7 +30,7 @@
 		},
 		"eye_rotate": {
 			"servo_index": 4,
-			"max_speed": 90,
+			"max_speed": 180,
 			"max_angle": 180,
 			"min_angle": 0,
 			"zero_offset": 90,

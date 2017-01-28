@@ -98,9 +98,17 @@ Robotic head with 5 DOF raspberry Pi robotic server and motion, video, sensor co
 ------------------------------------------------------------------------------------------------------
 # Voice
 
+
+## TTS Tutorials and resources
+* [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
+
+## TTS Libraries
 * [Python wrapper for Flite, Festival, etc](https://pypi.python.org/pypi/talkey/0.1.1)
 
+# Hearing
 
+## Speech Recognition Libraries
+* [Python Speech Recognition w/ Sphinx](https://pypi.python.org/pypi/SpeechRecognition/)
 
 
 

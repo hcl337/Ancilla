@@ -205,7 +205,7 @@ class Movement:
             # This is just a protection that should never be triggered. If it takes us 
             # waay too long, we need to log it and stop or we will crash the stack
             if( sleepAmount < 0 ):
-                raise Exception( "Servo update loop took more time to update than the allowed interval: " +  str(lastStartTime) + " " + str(interval) + " " +str(sleepAmount) + " " + str(time.time()) + " " + str(nextUpdate)) 
+                raise Exception( "Servo update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " + str(time.time()) + " " + str(nextUpdate)) 
                 self.disable()
 
             time.sleep( sleepAmount )
@@ -295,5 +295,5 @@ def set_servo_pulse(channel, pulse):
     #print('{0}us per bit'.format(pulse_length))
     pulse *= 1000
     pulse //= pulse_length
-    adafruitServoController.set_pwm(channel, 0, pulse)
+    adafruitServoController.set_pwm(channel, 0, int(pulse) )
 
