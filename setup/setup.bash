@@ -46,6 +46,10 @@ if [ "$platform" == "LINUX" ]
 # Install the Adafruit Servo drivers for python
 # https://github.com/adafruit/Adafruit_Python_PCA9685
     sudo pip install adafruit-pca9685
+    sudo apt-get install python-smbus
+    sudo apt-get install i2c-tools
+
+# NOTE!!! Need to add 'i2c-bcm2708' to /etc/modules also. Replace with auto-command
 fi
 
 ################################################################################
