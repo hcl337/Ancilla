@@ -94,6 +94,14 @@ Robotic head with 5 DOF raspberry Pi robotic server and motion, video, sensor co
 
 * Python servo library for Adafruit 16 channel servo board. [GITHub](https://github.com/adafruit/Adafruit_Python_PCA9685) [Tutorial](https://learn.adafruit.com/adafruit-16-channel-pwm-servo-hat-for-raspberry-pi/using-the-python-library)
 
+#### Important Note on Driving Hobby Servos
+NOTE: Even though servos have a 0 to 3.3 v control signal where 12-bits is 0 to 4095, for these, that will blow it up. The actual range of the server is 150 to 600 on RobotGeek servos. Therefore we need to map that to our positions correctly.
+
+From here: https://www.raspberrypi.org/forums/viewtopic.php?t=32826
+
+.5 ms / 4.8 usec = 104 the number required by our program to position the servo at 0 degrees
+1.5 msec / 4.8 usec = 312 the number required by our program to position the servo at 90 degrees
+2.5 msec / 4.8 usec = 521 the number required by our program to position the servo at 180 degrees
 
 ------------------------------------------------------------------------------------------------------
 # Voice

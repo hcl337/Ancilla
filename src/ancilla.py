@@ -63,9 +63,9 @@ hearing.enable( )
 ################################################################################
 
 
-movement.setServoAngle('head_tilt', 163, 20)
-time.sleep(6)
-movement.setServoAngle('head_tilt', 0, 90)
+movement.setServoAngle('neck_rotate', -90, 60)
+time.sleep(3)
+movement.setServoAngle('neck_rotate', 90, 60)
 time.sleep(5)
-movement.setServoAngle('head_tilt', 45, 30)
-time.sleep(10)
+movement.setServoAngle('neck_rotate', 0, 60)
+time.sleep(3)

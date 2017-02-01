@@ -37,6 +37,22 @@ def set_servo_angle(index, angle):
     if isRaspberryPi:
         adafruitServoController.set_pwm(index, 0, pulse)
 
+
+
+# Helper function to make setting a servo pulse width simpler.
+def __set_servo_pulse(channel, pulse):
+    '''
+    Low level code from Adafruit to control the pwm
+    '''
+    pulse_length = 1000000    # 1,000,000 us per second
+    pulse_length //= 60       # 60 Hz
+    #print('{0}us per period'.format(pulse_length))
+    pulse_length //= 4096     # 12 bits of resolution
+    #print('{0}us per bit'.format(pulse_length))
+    pulse *= 1000
+    pulse //= pulse_length
+    adafruitServoController.set_pwm(channel, 0, int(pulse) )
+    
 while True:
 
     adafruitServoController.set_pwm_freq(50)
