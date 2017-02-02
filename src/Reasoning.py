@@ -30,6 +30,11 @@ class Reasoning:
         self.hearing.addImportantWord( "your name" )
         self.hearing.addImportantWord( "hello" )
 
+    def enable( self ):
+        pass
+
+    def disable( self ):
+        pass
 
 
     def heardPhrase( self, phrase ):

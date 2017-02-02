@@ -152,6 +152,16 @@ class Movement:
 
 
 
+    def getState( self ):
+        '''
+        returns all the current params of the system
+        '''
+        # Return a clone of the data so we don't mess ours up by letting someone
+        # accidentally edit it.
+        return copy.deepcopy( self.servoState )
+
+
+
     def setServoAngle( self, name, angle, speed=None ):
         '''
         name  = The name of the servo

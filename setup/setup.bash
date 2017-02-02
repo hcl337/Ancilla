@@ -35,6 +35,31 @@ sudo pip install Pillow
 if [ "$platform" == "LINUX" ]
 # Now install pic image drivers
     sudo pip install picamera
+
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo rpi-update    
+    sudo apt-get install build-essential git cmake pkg-config
+    sudo apt-get install libjpeg8-dev libtiff4-dev libjasper-dev libpng12-dev
+    sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+    sudo apt-get install libgtk2.0-dev
+    sudo apt-get install libatlas-base-dev gfortran
+
+    cd ~
+    git clone https://github.com/Itseez/opencv_contrib.git
+    cd opencv_contrib
+    git checkout 3.1.0
+    sudo rm -rf ~/.cache/pip/
+    pip install numpy
+else
+    # OpenCV
+    brew tap homebrew/science
+    brew install opencv
+    sudo pip install numpy
+    # Set up paths in python
+    cat ~/.bash_profile | grep PYTHONPATH
+    ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
+    ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
 if
 
 
