@@ -8,9 +8,11 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
+
+print( os.name )
 # Allow us to run this on other systems for programming by not enabling the hardware
 # components and libraries.
-if 'arm' in os.name:
+if 'arm' in os.name or 'posix' in os.name:
     import Adafruit_PCA9685
     isRaspberryPi = True
 else:
@@ -19,7 +21,7 @@ else:
 
 class Movement:
     '''
-    The main class which controls the angle, speed and path of all the motors. It 
+    The main class which controls the angle, speed and path of all the motors. It
     reads the parameters for each motor from the setup JSON file and takes care
     of end constraints, maximum velocity, automatic updates, etc.
 
@@ -64,8 +66,8 @@ class Movement:
             logger.info(self.servoState['servos'][servo])
             servos[servo]['requested_angle'] = servos[servo]['resting_angle']
             servos[servo]['current_angle'] = servos[servo]['resting_angle']
-            servos[servo]['requested_speed'] = 0
-            servos[servo]['current_speed'] = 0
+            servos[servo]['requested_speed'] = 10
+            servos[servo]['current_speed'] = 10
 
         logger.info("\tSet initial positions and speed for servos..")
 
@@ -76,14 +78,14 @@ class Movement:
 
             logger.info("\tInstantiation starting: Adafruit PCA9685 16 Servo Board")
 
-            # let someone send in an already constructed controller object if 
+            # let someone send in an already constructed controller object if
             # we are passing it in from somewhere else. If not, we should create
             # it ourselves.
-            if adafruitServoController != None:
+            if adafruitServoController == None:
                 self.adafruitServoController = Adafruit_PCA9685.PCA9685()
-            
-            # Set frequency to 60hz, good for servos. (From AdaFruit - not sure why)
-            self.adafruitServoController.set_pwm_freq(self.servoState['params']['pwm_frequency'])
+            else:
+                self.adafruitServoController = adafruitServoController
+
 
             logger.info("\tInstantiation complete: Adafruit PCA9685 16 Servo Board")
         # This allows us to run on Mac for testing
@@ -111,6 +113,7 @@ class Movement:
         if self.updateLoopActive:
             raise Exception("Trying to start the muscles but they are already started.")
 
+        logger.info("Enabling movement (Servo motors)")
         self.updateLoopActive = True
 
         # Create our thread
@@ -120,6 +123,8 @@ class Movement:
         # Need to actually start it running where it calls the update function
         updateThread.start()
 
+        for servo in self.servoState['servos']:
+          self.setServoAngle(servo, self.servoState['servos'][servo]['resting_angle'], 10)
 
 
     def disable( self ):
@@ -160,9 +165,9 @@ class Movement:
         servo = self.servoState['servos'][name]
 
         # Keep things in bounds for our requested position
-        if angle > servo['max_angle']: 
+        if angle > servo['max_angle']:
             servo['requested_angle'] = servo['max_angle']
-        elif angle < servo['min_angle']: 
+        elif angle < servo['min_angle']:
             servo['requested_angle'] = servo['min_angle']
         else:
             servo['requested_angle'] = angle
@@ -181,42 +186,43 @@ class Movement:
 
     def __updateLoop( self ):
         '''
-        Loop through all of our specified PWMs and update them with our position/speed data. This 
+        Loop through all of our specified PWMs and update them with our position/speed data. This
         creates a thread which loops at our defined rate to update them
         '''
+        print("Update loop")
+        try:
+            # Set the PWM update interval based on our parameters
+            interval = 1.0 / self.servoState['params']['servo_position_update_rate_hz']
+            logger.info("Setting servo angle Update Interval to " + str(round(1/interval)) + " hz.")
+    
+    
+            # If we have stopped this loop then de-activate the servos before we do anything else
+            while( self.updateLoopActive ):
 
-        # Set the PWM update interval based on our parameters
-        interval = 1.0 / self.servoState['params']['servo_position_update_rate_hz']
-        logger.info("Setting servo angle Update Interval to " + str(round(1/interval)) + " hz.")
-
-
-        # If we have stopped this loop then de-activate the servos before we do anything else
-        while( self.updateLoopActive ):
-
-            try:
                 # Calculate the start time so we know how much time has happened before we trigger
                 # this again
                 startTime = time.time()
                 nextUpdate = startTime + interval
-
+    
                 # Active the actual work for updating
                 self.__updateServos( interval )
-
+    
                 # It probably took some time to update, so schedule the next update to be minus
                 # that time
                 sleepAmount = nextUpdate - time.time()
-
-                # This is just a protection that should never be triggered. If it takes us 
+    
+                # This is just a protection that should never be triggered. If it takes us
                 # waay too long, we need to log it and stop or we will crash the stack
                 if( sleepAmount < 0 ):
-                    raise Exception( "Servo update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " + str(time.time()) + " " + str(nextUpdate)) 
+                    raise Exception( "Servo update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
                     self.disable()
-
+    
                 time.sleep( sleepAmount )
-            except Exception as e:
-                self.updateLoopActive = None
-                logger.error(e)
+        except Exception as e:
+            self.updateLoopActive = None
+            logger.error(e)
 
+        print("Update end")
 
 
     def __updateServos( self, interval ):
@@ -227,6 +233,8 @@ class Movement:
         # Loop through and update every servo
         for servoName in self.servoState['servos']:
             servo = self.servoState['servos'][servoName]
+            
+            print("\t\tUpdating Servo: " + servoName )
 
             # Max distance we can travel in this tick due to the servo constraints
             max_distance_to_increment = servo['requested_speed'] * interval
@@ -245,7 +253,7 @@ class Movement:
 
             # When we get really close, we don't want to jump at the end, so this
             # makes it where we slow down in the last few degrees. This will slow
-            # it down to 1/4 the speed once close 
+            # it down to 1/4 the speed once close
             if abs(total_distance_to_increment) < servo['precision_threshold_angle']:
                 increment = distance_to_increment/4 + distance_to_increment * abs(total_distance_to_increment / servo['precision_threshold_angle']) * 3 / 4
             else:
@@ -260,7 +268,9 @@ class Movement:
 
             # Only update if we are actually moving somewhere. Otherwise it can keep its old location
             # we will just let it be there and will also not output ant other elements
-            if servo['current_speed'] == 0: continue
+            if servo['current_speed'] == 0:
+                print("\t\t Servo not moving: " )
+                continue
 
             logger.info("Moving " + servoName + " from " + str(servo['current_angle']) + " to " + str(servo['requested_angle']) + " deg at " + str(servo['current_speed']) + " deg / sec "  )
 
@@ -274,7 +284,7 @@ class Movement:
 
 
 
-    # These are a set of constants that have to do with the actual driver board and 
+    # These are a set of constants that have to do with the actual driver board and
     # the spec for hobby servos so they are not changable. Also, because these are
     # used so much, we don't want to do a lookup in a dictionary or other slow
     # element
@@ -287,29 +297,28 @@ class Movement:
     TICKS_PER_SECOND = (2**12)*PWM_FREQUENCY     # 12-bit at PWM frequency
     TICKS_PER_MSEC = TICKS_PER_SECOND / 1000.0
 
-    @staticmethod
-    def __set_servo_pwm_pulse(servo, angle):
+    def __set_servo_pwm_pulse(self, servo, angle):
         '''
         Converts our servo angle into a pulse for the PWM. The PWM is 12 bits so itis 0..4095 but
         servos expect a 50 hz update and uses only a subset of the data
 
-        First it needs a frequency that results in a 20 msec cycle time by using the formula 1 / Cycle Time = Frequency. 
+        First it needs a frequency that results in a 20 msec cycle time by using the formula 1 / Cycle Time = Frequency.
         So, 1 divided by .020 results in 50 Hz, which is one input needed by our program.
 
-        Next let's divide our 20 msec cycle by 4096 units, and we get 4.8 usec per unit. Now we can divide 
+        Next let's divide our 20 msec cycle by 4096 units, and we get 4.8 usec per unit. Now we can divide
         the pulse widths needed by a typical servo by the resolution of our controlling device.
 
-        Results: 
+        Results:
         * 0.5 ms / 4.8 usec = 102 the number required by our program to position the servo at 0 degrees
         * 1.5 msec / 4.8 usec = 307 the number required by our program to position the servo at 90 degrees
         * 2.5 msec / 4.8 usec = 512 the number required by our program to position the servo at 180 degrees
         '''
 
-        # 
+        #
         #pulse = int( 4096 * (angle + servo['zero_offset']) / 180 )
 
         # Bound the signal so we don't command something impossible
-        if angle > Movement.MAX_ANGLE: angle = Movement.MAX_ANGLE 
+        if angle > Movement.MAX_ANGLE: angle = Movement.MAX_ANGLE
         if angle < Movement.MIN_ANGLE: angle = Movement.MIN_ANGLE
 
         # The hobby servo spec says it defaults to 0.5ms to 2.5ms with the center being 1.5ms
@@ -319,10 +328,12 @@ class Movement:
         # Convert to ticks which equal the number of milliseconds we need
         pulseInTicks = int( round( msecPulse * Movement.TICKS_PER_MSEC) )
 
-        logger.debug( str( servo['servo_index'] ) + ": servo_angle = " + str( angle) + " servo_speed = " + str(servo['current_speed']) + " pwm_pulse: " + str(round(msecPulse, 3) ) + " pwm_200ticks = " + str(pulseInTicks) + " / 4096" )
+        logger.debug( str( servo['servo_index'] ) + ": servo_angle = " + str( angle) + " servo_speed = " + str(servo['current_speed']) + " pwm_pulse: " + str(round(msecPulse, 3) ) + " pwm_ticks = " + str(pulseInTicks) + " / 4096" )
 
         # Don't send out a command unless we are talking to a real raspberry pi
-        if isRaspberryPi: adafruitServoController.set_pwm(servo['servo_index'], pulseInTicks)
-        else: pass
+        if isRaspberryPi:
+            self.adafruitServoController.set_pwm(servo['servo_index'], 0, pulseInTicks)
+        else:
+            pass
 
 

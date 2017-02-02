@@ -8,7 +8,8 @@ import time
 # Import the PCA9685 module.
 import Adafruit_PCA9685
 
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 # Uncomment to enable debug output.
 #import logging
 #logging.basicConfig(level=logging.DEBUG)
@@ -38,8 +39,7 @@ def set_servo_pulse(channel, pulse):
 # Set frequency to 60hz, good for servos.
 pwm.set_pwm_freq(50)
 
-set_servo_pulse(0, 1.5)
-exit()
+
 print('Moving servo on channel 0, press Ctrl-C to quit...')
 #while True:
 # Move servo on channel O between extremes.
@@ -51,7 +51,13 @@ pwm.set_pwm(0, 0, 512)
 time.sleep(1)
 #set_servo_pulse(0, 1.5)
 pwm.set_pwm(0, 0, 312)
-time.sleep(4)
+time.sleep(2)
 
-
+for i in range(1,4):
+  pwm.set_pwm(i, 0, 350)
+  time.sleep(1)
+  pwm.set_pwm(i, 0, 250)
+  time.sleep(1)
+  pwm.set_pwm(i, 0, 312)
+  time.sleep(1)
   # 521, 104, 312
