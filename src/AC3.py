@@ -34,8 +34,8 @@ class AC3:
 
         self.speech = Speech( )
         self.speech.enable( )
-        #self.speech.say( "Booting AC-3 Operating system." )
-        #self.speech.say( "Speech" )
+        self.speech.say( "Speech Enabled" )
+        self.speech.say( "Booting AC-3 Operating system." )
 
         self.movement = Movement( "../parameters/servos.json" )
         self.movement.enable( )
@@ -53,14 +53,14 @@ class AC3:
         #self.speech.say( "Hearing")
 
         self.reasoning = Reasoning( self.speech, self.movement, self.expression, self.vision, self.hearing )
-        self.hearing.subscribe( self.reasoning.heardPhrase )
+        #self.hearing.subscribe( self.reasoning.heardPhrase )
         #speech.say( "Reasoning")
 
         self.server = AC3Server( self )
         self.server.enable()
 
 
-        #while( speech.isTalking() ):
+        #while( self.speech.isTalking() ):
         #    time.sleep(1)
 
         endTime = time.time()
@@ -97,9 +97,9 @@ class AC3:
         self.vision.disable( )
         self.hearing.disable( )
         self.reasoning.disable( )
-        self.server.disable( )   
+        self.server.disable( )
         
-        time.sleep( 1 )     
+        time.sleep( 1 )
         logger.info("Shutdown complete.")
         exit( 0 )
 
@@ -119,11 +119,11 @@ webbrowser.open("http://localhost:8888", new=2)
 ################################################################################
 
 
-ac3.movement.setServoAngle('neck_rotate', -90, 60)
+ac3.movement.setServoAngle('neck_rotate', -10, 20)
 time.sleep(3)
-ac3.movement.setServoAngle('neck_rotate', 90, 60)
+ac3.movement.setServoAngle('neck_rotate', 10, 20)
 time.sleep(5)
-ac3.movement.setServoAngle('neck_rotate', 0, 60)
+ac3.movement.setServoAngle('neck_rotate', 0, 20)
 time.sleep(3)
 
 #ac3.shutdown()

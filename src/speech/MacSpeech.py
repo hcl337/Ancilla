@@ -23,7 +23,7 @@ class MacSpeech:
         '''
         Speak the phrase and wait until it is done, blocking the thread
         '''
-        self.synthesizer.startSpeakingString_(phrase)    
+        self.synthesizer.startSpeakingString_(phrase)
         time.sleep(0.5)
         while self.synthesizer.isSpeaking():
             time.sleep(0.1)

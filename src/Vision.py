@@ -9,8 +9,7 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-if 'arm' in os.name:
-    import Adafruit_PCA9685
+if 'raspberrypi' in os.uname()[1]:
     isRaspberryPi = True
 else:
     isRaspberryPi = False

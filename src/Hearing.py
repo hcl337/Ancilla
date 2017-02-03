@@ -9,11 +9,11 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-import speech_recognition
 
-if 'arm' in os.name:
+if 'raspberrypi' in os.uname()[1]:
     isRaspberryPi = True
 else:
+    import speech_recognition
     isRaspberryPi = False
 
 class Hearing:
@@ -27,7 +27,7 @@ class Hearing:
 
     recognizer = None
 
-    importantWords = [] 
+    importantWords = []
 
     callbacks = []
 
@@ -72,7 +72,7 @@ class Hearing:
             logger.info("I heard: " + phrase)
             
             for fn in self.callbacks:
-                fn(phrase)        
+                fn(phrase)
 
     
     def __listen( self ):

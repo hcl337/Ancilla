@@ -5,7 +5,7 @@ platform='unknown'
 
 case "$OSTYPE" in
   solaris*) platform="SOLARIS" ;;
-  darwin*)  platform="OSX" ;; 
+  darwin*)  platform="OSX" ;;
   linux*)   platform="LINUX" ;;
   bsd*)     platform="BSD" ;;
   msys*)    platform="WINDOWS" ;;
@@ -21,7 +21,7 @@ echo "$platform"
 sudo apt-get install python-dev python-pip python-opencv libjpeg-dev
 
 # Now install tornado python web server for our web interface
-sudo pip install tornado 
+sudo pip install tornado
 
 
 
@@ -30,7 +30,7 @@ sudo pip install tornado
 ################################################################################
 
 # Now install Pillow to do python drawing and image stuff
-sudo pip install Pillow 
+sudo pip install Pillow
 
 if [ "$platform" == "LINUX" ]
 # Now install pic image drivers
@@ -38,7 +38,7 @@ if [ "$platform" == "LINUX" ]
 
     sudo apt-get update
     sudo apt-get upgrade
-    sudo rpi-update    
+    sudo rpi-update
     sudo apt-get install build-essential git cmake pkg-config
     sudo apt-get install libjpeg8-dev libtiff4-dev libjasper-dev libpng12-dev
     sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
@@ -111,10 +111,51 @@ if [ "$platform" == "OSX" ]
     brew install --HEAD watsonbox/cmu-sphinx/cmu-pocketsphinx
     pip install --ignore-installed six
     sudo pip install --upgrade google-api-python-client
+    
+    
+    
+
+
 
     # Test it on the terminal with a live mic feed: "pocketsphinx_continuous -inmic yes"
 else
 	sudo pip install pyaudio
+
+    #Installing build tools and required libraries
+    
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install bison
+    sudo apt-get install libasound2-dev
+    sudo apt-get install swig
+    sudo apt-get install python-dev
+    sudo apt-get install mplayer
+    
+    #Building Sphinxbase
+    
+    cd ~/
+    wget http://sourceforge.net/projects/cmusphinx/files/sphinxbase/5prealpha/sphinxbase-5prealpha.tar.gz
+    tar -zxvf ./sphinxbase-5prealpha.tar.gz
+    cd ./sphinxbase-5prealpha
+    ./configure --enable-fixed
+    make clean all
+    make check
+    sudo make install
+    
+    #Building PocketSphinx
+    
+    cd ~/
+    wget http://sourceforge.net/projects/cmusphinx/files/pocketsphinx/5prealpha/pocketsphinx-5prealpha.tar.gz
+    tar -zxvf pocketsphinx-5prealpha.tar.gz
+    cd ./pocketsphinx-5prealpha
+    ./configure
+    make clean all
+    make check
+    sudo make install
+    cd ~/
+    export LD_LIBRARY_PATH=/usr/local/lib
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+
 fi
 
 sudo pip install SpeechRecognition

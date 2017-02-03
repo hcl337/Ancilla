@@ -10,7 +10,8 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-if 'arm' in os.name:
+print os.uname()[1]
+if 'raspberrypi' in os.uname()[1]:
     from speech.RaspberryPiSpeech import RaspberryPiSpeech
     isRaspberryPi = True
 else:
@@ -26,6 +27,7 @@ class Speech:
     '''
 
     isEnabled = False
+    currentlySpeaking = False
 
     # This will hold all of our phrases so they are said in order
     phraseQueue = Queue()
@@ -74,7 +76,7 @@ class Speech:
 
 
     def isTalking( self ):
-        return self.phraseQueue.qsize() > 0
+        return self.phraseQueue.qsize() > 0 or self.currentlySpeaking
 
 
 
@@ -82,19 +84,29 @@ class Speech:
 
         while self.isEnabled:
 
-            # While there is nothing, just sleep
-            if  self.phraseQueue.qsize() == 0:
-                time.sleep(0.25)
-                continue
+            try:
+                
+                # While there is nothing, just sleep
+                if  self.phraseQueue.qsize() == 0:
+                    time.sleep(0.25)
+                    continue
 
-            phrase = self.phraseQueue.get( 0 )
+                self.currentlySpeaking = True
+    
+                phrase = self.phraseQueue.get( 0 )
+    
+                logger.debug( "Saying Sentence from Queue: " + phrase)
+    
+                self.engine.sayAndWait(phrase)
+    
+                logger.debug("Completed phrase: " + phrase )
 
-            logger.debug( "Saying Sentence from Queue: " + phrase)
-
-            self.engine.sayAndWait(phrase)
-
-            logger.debug("Completed phrase: " + phrase )
-
-            # Add in a human wait inbetween ideas
-            #time.sleep( 0.2)
+                self.currentlySpeaking = False
+    
+                # Add in a human wait inbetween ideas
+                #time.sleep( 0.2)
+            except Exception as e:
+                logger.error("Exception in Speech loop: " + str(e) )
+                logger.info("Speech loop exiting")
+                break
 
