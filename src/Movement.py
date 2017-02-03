@@ -132,8 +132,6 @@ class Movement:
         Stops all servo updates by killing the update loop
 
         '''
-        if not self.updateLoopActive:
-            raise Exception("Trying to stop the muscles but they are already stopped.")
 
         self.updateLoopActive = False
 
@@ -244,7 +242,7 @@ class Movement:
         for servoName in self.servoState['servos']:
             servo = self.servoState['servos'][servoName]
             
-            print("\t\tUpdating Servo: " + servoName )
+            #print("\t\tUpdating Servo: " + servoName )
 
             # Max distance we can travel in this tick due to the servo constraints
             max_distance_to_increment = servo['requested_speed'] * interval
@@ -279,7 +277,7 @@ class Movement:
             # Only update if we are actually moving somewhere. Otherwise it can keep its old location
             # we will just let it be there and will also not output ant other elements
             if servo['current_speed'] == 0:
-                print("\t\t Servo not moving: " )
+                #print("\t\t Servo not moving: " )
                 continue
 
             logger.info("Moving " + servoName + " from " + str(servo['current_angle']) + " to " + str(servo['requested_angle']) + " deg at " + str(servo['current_speed']) + " deg / sec "  )

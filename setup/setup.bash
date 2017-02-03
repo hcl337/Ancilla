@@ -117,6 +117,7 @@ if [ "$platform" == "OSX" ]
 
 
 
+    # https://wolfpaulus.com/embedded/raspberrypi2-sr/
     # Test it on the terminal with a live mic feed: "pocketsphinx_continuous -inmic yes"
 else
 	sudo pip install pyaudio
@@ -155,6 +156,8 @@ else
     cd ~/
     export LD_LIBRARY_PATH=/usr/local/lib
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+
+    # Check out this for Sphinx https://wolfpaulus.com/embedded/raspberrypi2-sr/ 
 
 fi
 

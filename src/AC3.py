@@ -5,7 +5,7 @@ from Movement import Movement
 from Vision import Vision
 from Expression import Expression
 from Speech import Speech
-from Hearing import Hearing
+from hearing.SphinxHearing import SphinxHearing
 from Reasoning import Reasoning
 from server.WebServer import AC3Server
 
@@ -34,11 +34,11 @@ class AC3:
 
         self.speech = Speech( )
         self.speech.enable( )
-        self.speech.say( "Speech Enabled" )
-        self.speech.say( "Booting AC-3 Operating system." )
+        #self.speech.say( "Speech Enabled" )
+        #self.speech.say( "Booting AC-3 Operating system." )
 
         self.movement = Movement( "../parameters/servos.json" )
-        self.movement.enable( )
+        #self.movement.enable( )
         #self.speech.say( "Movement")
 
         self.expression = Expression( )
@@ -49,10 +49,11 @@ class AC3:
         self.vision.enable( )
         #self.speech.say( "Vision")
 
-        self.hearing = Hearing( )
+        self.hearing = SphinxHearing( self.speech )
+        self.hearing.enable( ) 
         #self.speech.say( "Hearing")
 
-        self.reasoning = Reasoning( self.speech, self.movement, self.expression, self.vision, self.hearing )
+        self.reasoning = Reasoning( self )
         #self.hearing.subscribe( self.reasoning.heardPhrase )
         #speech.say( "Reasoning")
 
@@ -68,14 +69,20 @@ class AC3:
         #hearing.enable( )
 
         logger.info("Completed initializing AC3")
-
+        logger.info("")
+        logger.info("")
+        logger.info("################################################################################")
+        logger.info("##                   Initialization fully complete")
+        logger.info("################################################################################")
+        logger.info("")
+        logger.info("")
 
 
     # This makes sure we don't try to shut down multiple times
-    __isRunning = True
+    __isRunningNow = True
 
     def isRunning( self ):
-        return self.__isRunning
+        return self.__isRunningNow
 
 
 
@@ -85,10 +92,10 @@ class AC3:
 
         '''
 
-        if not self.__isRunning:
+        if not self.__isRunningNow:
             return
 
-        self.isRunning = False
+        self.__isRunningNow = False
 
         logger.info("Shutting down robot...")
         self.speech.disable( )
@@ -118,17 +125,17 @@ webbrowser.open("http://localhost:8888", new=2)
 # Run the sysetm
 ################################################################################
 
-
+'''
 ac3.movement.setServoAngle('neck_rotate', -10, 20)
 time.sleep(3)
 ac3.movement.setServoAngle('neck_rotate', 10, 20)
 time.sleep(5)
 ac3.movement.setServoAngle('neck_rotate', 0, 20)
 time.sleep(3)
-
+'''
 #ac3.shutdown()
 
 # Keep it going forever unless we shut down
-while( ac3.isRunning( ) ):
+while ac3.isRunning( ):
     time.sleep(1)
 

@@ -22,6 +22,8 @@ class Hearing:
 
     '''
 
+    # Reference
+    speech = None
 
     isEnabled = False
 
@@ -31,11 +33,15 @@ class Hearing:
 
     callbacks = []
 
-    def __init__(self):
+    MIN_TIME_AFTER_I_SPEAK_TO_LISTEN = 3
+
+
+    def __init__(self, speech):
     	logger.info("Creating Hearing...")
 
         self.recognizer = speech_recognition.Recognizer()
 
+        self.speech = speech
 
     def enable( self ):
 
@@ -68,6 +74,12 @@ class Hearing:
         while self.isEnabled:
 
             phrase = self.__listen( )
+
+            logger.info("TimeSince AC3 last spoke:" + str(speech.timeSinceLastSpoke()))
+            
+            if speech.timeSinceLastSpoke() < MIN_TIME_AFTER_I_SPEAK_TO_LISTEN:
+                logger.info("Heard something, but was speaking so it was AC3 talking: " + phrase)
+                continue
 
             logger.info("I heard: " + phrase)
             

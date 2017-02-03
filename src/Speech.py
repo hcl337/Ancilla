@@ -80,6 +80,15 @@ class Speech:
 
 
 
+    def timeSinceLastSpoke( self ):
+        if self.isTalking():
+            return 0
+
+        return round( time.time() - self.lastFinishedTalking, 2)
+
+
+    lastFinishedTalking = time.time()
+
     def __speechLoop( self ):
 
         while self.isEnabled:
@@ -102,7 +111,10 @@ class Speech:
                 logger.debug("Completed phrase: " + phrase )
 
                 self.currentlySpeaking = False
-    
+
+                # Record when we end so we know how long it has been
+                self.lastFinishedTalking = time.time()
+
                 # Add in a human wait inbetween ideas
                 #time.sleep( 0.2)
             except Exception as e:

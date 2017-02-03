@@ -101,8 +101,13 @@ class WebSocket(tornado.websocket.WebSocketHandler):
 
     def stateLoop(self):
         try:
-            self.write_message(json.dumps(self.AC3.movement.getState(), indent=4))
-        except tornado.websocket.WebSocketClosedError:
+            data = {
+                "movement": self.AC3.movement.getState(),
+                "memory": self.AC3.reasoning.getMemory()
+            }
+            self.write_message(json.dumps(data, indent=4))
+        except tornado.websocket.WebSocketClosedError as e:
+            logger.error("WebsocketError in stateloop WebSocket: " + str(e))
             self.state_loop.stop()
         except Exception as e:
             self.state_loop.stop()
