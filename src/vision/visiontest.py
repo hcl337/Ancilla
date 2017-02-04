@@ -1,5 +1,4 @@
-import numpy.core.multiarray
-import cv2
+import cv2.cv as cv
 import time
 
 cv.NamedWindow("camera", 1)

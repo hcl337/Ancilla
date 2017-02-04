@@ -55,6 +55,14 @@ class Reasoning:
             self.ac3.speech.say( "You are welcome!")
         elif 'good night' in phrase:
             self.ac3.speech.say( "Sleep well. I will be waiting for you to return")
+        elif 'look left' in phrase:
+            self.ac3.movement.setServoAngle('neck_rotate', -60, 60)
+        elif 'look right' in phrase:
+            self.ac3.movement.setServoAngle('neck_rotate', 60, 60)
+        elif 'look up' in phrase:
+            self.ac3.movement.setServoAngle('head_tilt', 20, 60)
+        elif 'look down' in phrase:
+            self.ac3.movement.setServoAngle('head_tilt', -20, 60)
         elif 'good morning' in phrase:
             self.ac3.speech.say( "It is a good morning!")
         elif 'spoon' in phrase:

@@ -82,7 +82,7 @@ class SphinxHearing( ):
         self.hearingProcess = subprocess.Popen(command, stdout=subprocess.PIPE, preexec_fn=os.setsid)
         # Grab stdout line by line as it becomes available.  This will loop until 
         # p terminates.
-        while self.hearingProcess and self.hearingProcess.poll():
+        while self.hearingProcess and self.hearingProcess.poll() == None:
 
             # This waits for each line to come in
             phrase = self.hearingProcess.stdout.readline() # This blocks until it receives a newline.
@@ -90,6 +90,7 @@ class SphinxHearing( ):
             # We get a lot of garbage back from the system so don't 
             phrase = phrase.strip()
             if phrase.startswith("INFO: ") or len( phrase ) == 0:
+                
                 continue
 
             # We have a problem that we could be listening to our selves. We don't want to do that! 

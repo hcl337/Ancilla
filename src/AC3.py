@@ -15,6 +15,10 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class AC3:
+    '''
+    Main class for the robot which is the glue for all the different parts. It should
+    also be passed around for each sub-unit to use to reference the other units cleanly.
+    '''
 
     speech = None
     movement = None
@@ -51,7 +55,6 @@ class AC3:
 
         self.hearing = SphinxHearing( self.speech )
         self.hearing.enable( ) 
-        #self.speech.say( "Hearing")
 
         self.reasoning = Reasoning( self )
         #self.hearing.subscribe( self.reasoning.heardPhrase )
@@ -60,12 +63,13 @@ class AC3:
         self.server = AC3Server( self )
         self.server.enable()
 
-
-        #while( self.speech.isTalking() ):
-        #    time.sleep(1)
+        # We want to wait if it is still talking before we say
+        # everything is done.
+        while( self.speech.isTalking() ):
+            time.sleep(1)
 
         endTime = time.time()
-        self.speech.say( "Ready")
+        self.speech.say( "Ready in " + str(round(endTime-startTime, 2 )) + " seconds.")
         #hearing.enable( )
 
         logger.info("Completed initializing AC3")

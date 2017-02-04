@@ -23,6 +23,16 @@ sudo apt-get install python-dev python-pip python-opencv libjpeg-dev
 # Now install tornado python web server for our web interface
 sudo pip install tornado
 
+# Necessary even on Mac because we want our new version
+sudo pip install python
+
+# Update ~/.bash_profile to have
+# export PATH=/usr/local/bin:$PATH
+
+sudo pip install pyobjc
+sudo pip install requests
+
+
 
 
 ################################################################################
