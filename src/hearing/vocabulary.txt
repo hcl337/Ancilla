@@ -21,6 +21,7 @@ daughter
 wife
 sister
 brother
+chance
 
 look at my face
 look left

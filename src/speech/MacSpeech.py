@@ -5,6 +5,9 @@ import sys
 
 class MacSpeech:
     voice = "com.apple.speech.synthesis.voice.serena.premium"
+    #voice = "com.apple.speech.synthesis.voice.Zarvox" # Robot
+    #voice = "com.apple.speech.synthesis.voice.Fred"
+    
     synthesizer = None
 
     def __init__(self):
@@ -16,7 +19,6 @@ class MacSpeech:
             raise Exception("Specified voice not found: " + voice)
 
         self.synthesizer.setVoice_(self.voice)
-
 
 
     def sayAndWait( self, phrase ):

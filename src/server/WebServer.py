@@ -11,7 +11,9 @@ from threading import Thread
 import tornado.web
 import tornado.websocket
 from tornado.ioloop import PeriodicCallback
+from tornado.websocket import WebSocketClosedError
 
+import cv2 as cv
 logger = logging.getLogger(__name__)
 
 
@@ -83,29 +85,62 @@ class WebSocket(tornado.websocket.WebSocketHandler):
 
 
     def on_message(self, message):
-        logger.debug("WebSocket: on_message")
-        """Evaluates the function pointed to by json-rpc."""
+        try:
 
-        if message == "read_state":
-            self.state_loop = PeriodicCallback(self.stateLoop, 100)
-            self.state_loop.start()
-        # Start an infinite loop when this is called
-        elif message == "read_camera":
-            pass
-            #self.camera_loop = PeriodicCallback(self.loop, 10)
-            #self.camera_loop.start()
+            logger.debug("WebSocket: on_message: " + str(message))
+            """Evaluates the function pointed to by json-rpc."""
 
-        # Extensibility for other methods
-        else:
-            print("Unsupported function: " + message)
+            if message == "read_state":
+                logger.debug("Starting to broadcast state")
+                self.state_loop = PeriodicCallback(self.stateLoop, 100)
+                self.state_loop.start()
+            # Start an infinite loop when this is called
+            elif message == "read_environment_camera":
+                logger.debug("Starting to broadcast environment camera")
+                self.AC3.vision.registerEnvironmentFrameListener( self.environmentCameraLoop )
+                #self.camera_loop = PeriodicCallback(self.loop, 5)
+                #self.camera_loop.start()
+            else:
+                logger.error("Received unexpected websocket message: " + str(message))
+        except WebSocketClosedError:
+            logger.error("Websocket connection disconnected")
+            raise
+        except:
+            self.AC3.reportFatalError()
+
+
+
+    def environmentCameraLoop(self):
+
+        try:
+            print("Send environment camera loop")
+
+            im = self.AC3.vision.getLatestEnvironmentFrame( )
+            cnt = cv.imencode('.jpg',im)[1]
+            b64 = base64.encodestring(cnt)        
+
+            message = {
+                "data": base64.encodestring(cnt),
+                "type": "environment_camera",
+            }
+
+            self.write_message( message )
+        except WebSocketClosedError:
+            logger.error("Websocket connection disconnected")
+            self.AC3.vision.unregisterEnvironmentFrameListener( self.environmentCameraLoop )            
+        except:
+            self.AC3.reportFatalError()
+
+
 
     def stateLoop(self):
         try:
             data = {
                 "movement": self.AC3.movement.getState(),
-                "memory": self.AC3.reasoning.getMemory()
+                "memory": self.AC3.reasoning.getMemory(),
+                "vision": self.AC3.vision.getVisibleObjects()
             }
-            self.write_message(json.dumps(data, indent=4))
+            self.write_message({"type":"state", "data": data})
         except tornado.websocket.WebSocketClosedError as e:
             logger.error("WebsocketError in stateloop WebSocket: " + str(e))
             self.state_loop.stop()

@@ -26,7 +26,7 @@ class Speech:
 
     '''
 
-    isEnabled = False
+    __isEnabled = False
     currentlySpeaking = False
 
     # This will hold all of our phrases so they are said in order
@@ -35,9 +35,12 @@ class Speech:
     # This holds the reference to our speech engine for Mac, Raspberry Pi, etc
     engine = None
 
-
-    def __init__(self):
+    AC3 = None
+    
+    def __init__(self, AC3):
     	logger.info("Creating Speech...")
+
+        self.AC3 = AC3
 
         if isRaspberryPi:
             self.engine = RaspberryPiSpeech()
@@ -50,10 +53,10 @@ class Speech:
 
         logger.info( "Enabling speech")
 
-        if self.isEnabled:
+        if self.__isEnabled:
             raise Exception("Speeking is already enabled")
 
-        self.isEnabled = True
+        self.__isEnabled = True
 
         speechThread = Thread(target=self.__speechLoop)
         # Make sure it dies if the whole app dies
@@ -64,7 +67,11 @@ class Speech:
 
 
     def disable( self ):
-    	self.isEnabled = False
+        self.__isEnabled = False
+
+
+    def isEnabled( self ):
+        return self.__isEnabled
 
 
 
@@ -91,7 +98,7 @@ class Speech:
 
     def __speechLoop( self ):
 
-        while self.isEnabled:
+        while self.__isEnabled:
 
             try:
                 
@@ -118,7 +125,6 @@ class Speech:
                 # Add in a human wait inbetween ideas
                 #time.sleep( 0.2)
             except Exception as e:
-                logger.error("Exception in Speech loop: " + str(e) )
-                logger.info("Speech loop exiting")
-                break
+                self._isEnabled = False
+                self.AC3.reportFatalError( )            
 

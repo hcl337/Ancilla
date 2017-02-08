@@ -23,7 +23,7 @@ class Expression:
 
     isEnabled = False
 
-    def __init__(self):
+    def __init__(self, AC3):
     	logger.info("Creating Expression...")
 
     def enable( self ):

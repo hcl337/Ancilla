@@ -1,106 +1,124 @@
-from __future__ import division
-
+import os, json
+import subprocess
+from hearing import updatesphinxvocabulary
 import logging
-import json
 import time
-import os
-import copy
+import signal
+import atexit
 from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
 
-if 'raspberrypi' in os.uname()[1]:
-    isRaspberryPi = True
-else:
-    import speech_recognition
-    isRaspberryPi = False
+HEARING_FILE_ROOT = os.path.normpath(os.path.dirname(__file__) )
+vocab_path = HEARING_FILE_ROOT + "/hearing/sphinx_vocabulary"
 
-class Hearing:
-    '''
-    The main class which represents the output of the system
+# This is a delay so that we don't "hear" a sentence that the
+# robot said. We have to hear a sentence which ended more than 3 seconds
+# after we stop speaking
+MIN_TIME_AFTER_I_SPEAK_TO_LISTEN = 3
 
-    '''
 
-    # Reference
-    speech = None
+class Hearing( ):
 
-    isEnabled = False
-
-    recognizer = None
-
-    importantWords = []
-
+    hearingProcess = None
     callbacks = []
+    AC3 = None
 
-    MIN_TIME_AFTER_I_SPEAK_TO_LISTEN = 3
+
+    def __init__( self, AC3 ):
+
+        logger.info("Updating vocabulary files...")
+
+        # Update our vocabulary with the latest version if possible
+        #updatesphinxvocabulary.updateVocabulary()
+
+        self.AC3 = AC3
+
+        # Register so if we exit for any reason, this will disable the
+        # thread and try to guarantee an exit
+        atexit.register(self.disable)
 
 
-    def __init__(self, speech):
-    	logger.info("Creating Hearing...")
 
-        self.recognizer = speech_recognition.Recognizer()
+    def isEnabled( self ):
+        return self.hearingProcess != None and self.hearingProcess.poll() == None
 
-        self.speech = speech
+
 
     def enable( self ):
 
-        if self.isEnabled:
-            raise Exception("Speeking is already enabled")
-
-        self.isEnabled = True
-
-        hearingThread = Thread(target=self.__hearingLoop)
+        logger.info("Enabling SphinxHearing")
+        # Create our thread
+        updateThread = Thread(target=self.__loop)
         # Make sure it dies if the whole app dies
-        hearingThread.setDaemon(True)
+        updateThread.setDaemon(True)
         # Need to actually start it running where it calls the update function
-        hearingThread.start()
+        updateThread.start()
 
 
 
     def disable( self ):
-    	isEnabled = False
+
+        if self.hearingProcess != None:
+            #self.hearingProcess.kill()
+            pid = self.hearingProcess.pid
+            self.hearingProcess = None
+
+            logger.debug("PID for hearing process to shut down: " + str( pid ))
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+            time.sleep( 3 )
 
 
-    def subscribe( self, callback ):
-        self.callbacks.append(callback)
 
-    def addImportantWord( self, word ):
-        self.importantWords.append( (word, 0.01) )
+    def registerListener( self, listener ):
+        self.callbacks.append(listener)
 
 
-    def __hearingLoop( self ):
 
-        while self.isEnabled:
+    def __loop( self ):
 
-            phrase = self.__listen( )
-
-            logger.info("TimeSince AC3 last spoke:" + str(speech.timeSinceLastSpoke()))
-            
-            if speech.timeSinceLastSpoke() < MIN_TIME_AFTER_I_SPEAK_TO_LISTEN:
-                logger.info("Heard something, but was speaking so it was AC3 talking: " + phrase)
-                continue
-
-            logger.info("I heard: " + phrase)
-            
-            for fn in self.callbacks:
-                fn(phrase)
-
-    
-    def __listen( self ):
-
-        logger.info("Starting to listen")
-        with speech_recognition.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source)
-            audio = self.recognizer.listen(source)
-            logger.info("Stopped Listening")
         try:
-            return self.recognizer.recognize_sphinx(audio )#, keyword_entries=self.importantWords )
-            #return self.recognizer.recognize_google_cloud(audio, credentials_json='{"credentials_json":"AIzaSyBz2YFvh18iKTIei2s50Gk7XwDco1hxObo"}')
-            # or: return recognizer.recognize_google(audio)
-        except speech_recognition.UnknownValueError:
-            print("Could not understand audio")
-        except speech_recognition.RequestError as e:
-            print("Recog Error; {0}".format(e))
+            logger.info("Starting speech loop")
 
-        return ""
+            hmmLocation = "/usr/local/share/pocketsphinx/model/en-us/en-us"
+            lmLocation = vocab_path + "/vocab.lm"
+            dictLocation = vocab_path + "/vocab.dic"
+
+            command = "pocketsphinx_continuous -hmm " + \
+                hmmLocation + " -lm " + lmLocation + " -dict " + \
+                dictLocation + " -samprate 16000/8000/4000 -inmic yes -logfn /dev/null"
+
+            command = command.split(" ")
+
+            # Kick off the actual process so we can wait
+            self.hearingProcess = subprocess.Popen(command, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+
+            # Grab stdout line by line as it becomes available.  This will loop until 
+            # p terminates.
+            while self.hearingProcess and self.hearingProcess.poll() == None:
+
+                # This waits for each line to come in
+                phrase = self.hearingProcess.stdout.readline() # This blocks until it receives a newline.
+
+                # We get a lot of garbage back from the system so don't report it
+                phrase = phrase.strip()
+                if phrase.startswith("INFO: ") or len( phrase ) == 0:
+                    continue
+
+                # We have a problem that we could be listening to ourselves. We don't want to do that! 
+                # Therefore there is a gap between when it speaks and when we will say we heard something
+                if time.time() - self.AC3.speech.timeSinceLastSpoke() < MIN_TIME_AFTER_I_SPEAK_TO_LISTEN:
+                    #logger.info("Not reporting words because AC3 just spoke: " + str(self.AC3.speech.timeSinceLastSpoke()))
+                    continue
+
+                # Send the event out to all of our listeners
+                for fn in self.callbacks:
+                    fn(phrase)     
+
+            # When the subprocess terminates there might be unconsumed output 
+            # that still needs to be processed.
+            if self.hearingProcess != None:
+                self.hearingProcess.stdout.read()    
+        except:
+            self.AC3.reportFatalError()

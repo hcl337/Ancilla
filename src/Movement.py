@@ -1,11 +1,11 @@
 from __future__ import division
-import logging
 import json
 import time
 import os
 import copy
 from threading import Timer, Thread
 
+import logging
 logger = logging.getLogger(__name__)
 
 
@@ -38,15 +38,17 @@ class Movement:
     # The servo controller board library
     adafruitServoController = None;
 
+    AC3 = None
 
-
-    def __init__(self, servoParamsFilePath, adafruitServoController=None):
+    def __init__(self, AC3, servoParamsFilePath, adafruitServoController=None):
         '''
         Constructor
 
         Initializes the servos, loads the parameters and sets everything up.
         To start the motors, call enable( ).
         '''
+
+        self.AC3 = AC3
 
         logger.info('Initializing muscles...')
 
@@ -228,7 +230,7 @@ class Movement:
                 time.sleep( sleepAmount )
         except Exception as e:
             self.updateLoopActive = None
-            logger.error(e)
+            self.AC3.reportFatalError( )            
 
         print("Update end")
 
