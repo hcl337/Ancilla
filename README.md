@@ -74,7 +74,7 @@ The system will use two cameras to enable both full environment awareness and ta
 * [Raspberry Pi Tornado Websocket video server code](https://github.com/patrickfuller/camp/blob/master/server.py)
 
 ------------------------------------------------------------------------------------------------------
-# Skeleton and Motor
+# Movement
 
 Robotic head with 5 DOF raspberry Pi robotic server and motion, video, sensor controller.
 
@@ -94,13 +94,44 @@ Robotic head with 5 DOF raspberry Pi robotic server and motion, video, sensor co
 
 * Python servo library for Adafruit 16 channel servo board. [GITHub](https://github.com/adafruit/Adafruit_Python_PCA9685) [Tutorial](https://learn.adafruit.com/adafruit-16-channel-pwm-servo-hat-for-raspberry-pi/using-the-python-library)
 
+### Important Notes on Driving Hobby Servos
+
+#### PWM does not mean PWM
+NOTE: Even though servos have a 0 to 3.3 v control signal where 12-bits is 0 to 4095, for these, that will blow it up. The actual range of the server is 150 to 600 on RobotGeek servos. Therefore we need to map that to our positions correctly.
+
+From here: https://www.raspberrypi.org/forums/viewtopic.php?t=32826
+
+.5 ms / 4.8 usec = 104 the number required by our program to position the servo at 0 degreees
+1.5 msec / 4.8 usec = 312 the number required by our program to position the servo at 90 degrees
+2.5 msec / 4.8 usec = 521 the number required by our program to position the servo at 180 degrees
+
+#### Smooth control of position at slow speeds is hard
+
+The contorller only updates at 50 hz and it seems that the actual position control of servos is only accurate to about 0.5 degrees which means that the whole thing can jitter a LOT. To account for this, we need to adjust the interpolation algorithms.
+
+A few things I have seen online:
+* Add a 100uF cap across the power/ground to slow any surges in current making it not jitter as much. I don't think this will matter as much on the larger power supply I have.
+* It takes multiple commands before some servos actually start moving, so there can be even bigger delays than commanded.
 
 ------------------------------------------------------------------------------------------------------
-# Voice
+# Speaking
 
+There are mupltiple 
+
+## TTS Tutorials and resources
+* [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
+
+## TTS Libraries
 * [Python wrapper for Flite, Festival, etc](https://pypi.python.org/pypi/talkey/0.1.1)
 
+------------------------------------------------------------------------------------------------------
+# Hearing
 
+There are two ways that speech recognition can be implemented. Either local(Sphinx) or cloud based (Amazon, Google). Cloud-based recognition will always be more accurate however there is a larger delay between speech and recognition. If local recognition is to be used, then a small vocabulary should be specified.
+
+## Speech Recognition Libraries
+* [Python Speech Recognition w/ Sphinx](https://pypi.python.org/pypi/SpeechRecognition/)
+    * pocketsphinx_continuous is a cross-platfrom application which can be executed to listen for a vocabulary
 
 
 

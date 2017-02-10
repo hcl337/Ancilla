@@ -87,3 +87,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+src/core/vision/resources/**/*.png
+src/core/vision/resources/**/*.jpg
