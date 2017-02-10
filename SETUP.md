@@ -6,7 +6,7 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 # Raspberry Pi Setup Script
 
 ------------------------------------------------------------------------------------------------------
-'''
+```
 ################################################################################
 # CORE
 ################################################################################
@@ -98,7 +98,7 @@ cd ~/
 export LD_LIBRARY_PATH=/usr/local/lib
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-'''
+```
 
 ------------------------------------------------------------------------------------------------------
 # Mac Setup Script
@@ -106,7 +106,7 @@ To enable easy development, most of the functionality can be executed on a Mac e
 
 This takes advantage of brew for many of the tasks.
 
-'''
+```
 ################################################################################
 # CORE
 ################################################################################
@@ -170,4 +170,4 @@ brew install --HEAD watsonbox/cmu-sphinx/cmu-sphinxbase
 brew install --HEAD watsonbox/cmu-sphinx/cmu-pocketsphinx
 pip install --ignore-installed six
 sudo pip install --upgrade google-api-python-client
-'''
+```
