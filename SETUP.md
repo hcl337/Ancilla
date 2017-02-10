@@ -6,7 +6,7 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 # Raspberry Pi Setup Script
 
 ------------------------------------------------------------------------------------------------------
-'''bash
+'''
 ################################################################################
 # CORE
 ################################################################################
@@ -106,7 +106,7 @@ To enable easy development, most of the functionality can be executed on a Mac e
 
 This takes advantage of brew for many of the tasks.
 
-'''bash
+'''
 ################################################################################
 # CORE
 ################################################################################
