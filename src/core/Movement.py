@@ -9,7 +9,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-print( os.name )
 # Allow us to run this on other systems for programming by not enabling the hardware
 # components and libraries.
 if 'raspberrypi' in os.uname()[1]:

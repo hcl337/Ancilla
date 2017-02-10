@@ -10,7 +10,6 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-print os.uname()[1]
 if 'raspberrypi' in os.uname()[1]:
     from speech.RaspberryPiSpeech import RaspberryPiSpeech
     isRaspberryPi = True

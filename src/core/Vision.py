@@ -224,9 +224,6 @@ class Vision( ):
                 #    self.disable()
                 if sleepAmount < 0: sleepAmount = 1 / 30
 
-                raise Exception("Hans broke me")
-
-
                 time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False

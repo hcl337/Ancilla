@@ -5,13 +5,13 @@ import traceback
 import inflection
 
 # Our imports
-from Movement import Movement
-from Vision import Vision
-from Expression import Expression
-from Speech import Speech
-from Hearing import Hearing
-from Reasoning import Reasoning
-from server.WebServer import AC3Server
+from core.Movement import Movement
+from core.Vision import Vision
+from core.Expression import Expression
+from core.Speech import Speech
+from core.Hearing import Hearing
+from core.Reasoning import Reasoning
+from webserver.WebServer import AC3Server
 
 # Set the minimum level we log. DEBUG will show everything.
 # INFO will show a lot less.
@@ -226,6 +226,14 @@ class AC3:
         logger.info("Shutdown complete.")
 
         self.__isRunningNow = False
+
+
+logger.info("################################################################################")
+logger.info("")
+logger.info("                              Ancilla|Three")
+logger.info("")
+logger.info("################################################################################")
+logger.info("")
 
 ac3 = AC3( )
 

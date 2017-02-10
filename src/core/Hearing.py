@@ -5,6 +5,7 @@ import logging
 import time
 import signal
 import atexit
+import psutil
 from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,13 @@ class Hearing( ):
         # Register so if we exit for any reason, this will disable the
         # thread and try to guarantee an exit
         atexit.register(self.disable)
+
+        # If we accidentally leave open pocket sphinx we need to 
+        # close it so we don't keep multiple around.
+        PROCNAME = "pocketsphinx_continuous"
+        for proc in psutil.process_iter():
+            if proc.name() == PROCNAME: proc.kill()
+
 
 
 

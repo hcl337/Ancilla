@@ -32,6 +32,8 @@ sudo pip install python
 sudo pip install pyobjc
 sudo pip install requests
 
+# Enable cross-platform finding and killing processes to clean up as necessary
+sudo pip install psutil
 
 
 

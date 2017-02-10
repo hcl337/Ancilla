@@ -74,7 +74,7 @@ The system will use two cameras to enable both full environment awareness and ta
 * [Raspberry Pi Tornado Websocket video server code](https://github.com/patrickfuller/camp/blob/master/server.py)
 
 ------------------------------------------------------------------------------------------------------
-# Movement and Servos
+# Movement
 
 Robotic head with 5 DOF raspberry Pi robotic server and motion, video, sensor controller.
 
@@ -114,8 +114,9 @@ A few things I have seen online:
 * It takes multiple commands before some servos actually start moving, so there can be even bigger delays than commanded.
 
 ------------------------------------------------------------------------------------------------------
-# Voice
+# Speaking
 
+There are mupltiple 
 
 ## TTS Tutorials and resources
 * [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
@@ -123,10 +124,14 @@ A few things I have seen online:
 ## TTS Libraries
 * [Python wrapper for Flite, Festival, etc](https://pypi.python.org/pypi/talkey/0.1.1)
 
+------------------------------------------------------------------------------------------------------
 # Hearing
+
+There are two ways that speech recognition can be implemented. Either local(Sphinx) or cloud based (Amazon, Google). Cloud-based recognition will always be more accurate however there is a larger delay between speech and recognition. If local recognition is to be used, then a small vocabulary should be specified.
 
 ## Speech Recognition Libraries
 * [Python Speech Recognition w/ Sphinx](https://pypi.python.org/pypi/SpeechRecognition/)
+    * pocketsphinx_continuous is a cross-platfrom application which can be executed to listen for a vocabulary
 
 
 
