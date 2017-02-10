@@ -10,7 +10,7 @@
 			"precision_threshold_angle":10
 		},
 		"neck_lean": {
-			"servo_index": 12,
+			"servo_index": 1,
 			"max_speed": 90,
 			"max_angle": -30,
 			"min_angle": 30,

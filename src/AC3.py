@@ -38,32 +38,65 @@ class AC3:
         # so we want to find errors first
         ################################################################################
 
-        startTime = time.time( )
+        logger.info("################################################################################")
+        logger.info("################################################################################")
+        logger.info("")
+        logger.info("                              Ancilla|Three")
+        logger.info("")
+        logger.info("################################################################################")
+        logger.info("################################################################################")
+        logger.info("")
 
-        self.speech = Speech( self )
-        self.speech.enable( )
-        #self.speech.say( "Speech Enabled" )
-        #self.speech.say( "Booting AC-3 Operating system." )
-
-        self.movement = Movement( self, "../parameters/servos.json" )
-        #self.movement.enable( )
-        #self.speech.say( "Movement")
-
-        self.expression = Expression( self )
-        self.expression.enable( )
-        #self.speech.say( "Expressions")
-
-        self.vision = Vision( self )
-        self.vision.enable( )
-        #self.speech.say( "Vision")
-
-        self.hearing = Hearing( self )
-        self.hearing.enable( ) 
-
-        self.reasoning = Reasoning( self )
-
-        self.server = AC3Server( self )
-        self.server.enable()
+        try:
+            startTime = time.time( )
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## SPEECH")
+            self.speech = Speech( self )
+            self.speech.enable( )
+            #self.speech.say( "Speech Enabled" )
+            #self.speech.say( "Booting AC-3 Operating system." )
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## EXPRESSION")
+            self.expression = Expression( self )
+            self.expression.enable( )
+            #self.speech.say( "Expressions")
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## VISION")
+            self.vision = Vision( self )
+            #self.vision.enable( )
+            #self.speech.say( "Vision")
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## HEARING")
+            self.hearing = Hearing( self )
+            #self.hearing.enable( )
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## MOVEMENT")
+            self.movement = Movement( self, "../parameters/servos.json" )
+            self.movement.enable( )
+            #self.speech.say( "Movement")
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## REASONING")
+            self.reasoning = Reasoning( self )
+    
+            logger.info("")
+            logger.info("")
+            logger.info("######################################## WEB SERVER")
+            self.server = AC3Server( self )
+            self.server.enable()
+        except:
+            self.reportFatalError( )
 
         # We want to wait if it is still talking before we say
         # everything is done.
@@ -72,17 +105,23 @@ class AC3:
 
         endTime = time.time()
 
-        self.speech.say( "Ready in " + str(round(endTime-startTime, 2 )) + " seconds.")
-        #hearing.enable( )
 
-        logger.info("Completed initializing AC3")
-        logger.info("")
-        logger.info("")
-        logger.info("################################################################################")
-        logger.info("##                   Initialization fully complete")
-        logger.info("################################################################################")
-        logger.info("")
-        logger.info("")
+        # If we didn't crash, report that we are ready to go
+        if self.isRunning( ):
+            self.speech.say( "Ready in " + str(round(endTime-startTime, 2 )) + " seconds.")
+                
+            logger.info("Completed initializing AC3")
+            logger.info("")
+            logger.info("")
+            logger.info("################################################################################")
+            logger.info("################################################################################")
+            logger.info("")
+            logger.info("##                   Initialization fully complete")
+            logger.info("")
+            logger.info("################################################################################")
+            logger.info("################################################################################")
+            logger.info("")
+            logger.info("")
 
 
     # This makes sure we don't try to shut down multiple times
@@ -106,7 +145,7 @@ class AC3:
 
         ex_type, ex, tb = sys.exc_info()
 
-        # Try to get the name of the module we are 
+        # Try to get the name of the module we are
         try:
             frm = inspect.stack()[1]
             mod = inspect.getmodule(frm[0])
@@ -120,14 +159,23 @@ class AC3:
             logger.error( "" )
             logger.error( "" )
             logger.error( "################################################################################")
+            logger.error( "################################################################################")
             logger.error( "" )
-            logger.error( "FATAL ERROR REPORTED" )
-            logger.error( "" )
-            logger.error( "Error reporting fatal error: " + str(ex_type.__name__) )
-            logger.error( "Reason specified: " + str(ex))
+            logger.error( "                            FATAL ERROR REPORTED" )
             logger.error( "" )
             logger.error( "################################################################################")
-            logger.error( traceback.format_exc(tb))
+            logger.error( "################################################################################")
+            logger.error( "" )
+            logger.error( "TYPE:   " + str(ex_type.__name__) )
+            logger.error( "" )
+            logger.error( "REASON: " + str(ex))
+            logger.error( "" )
+            logger.error( "TRACE:")
+            logger.error( "" )
+            for l in traceback.format_exc(tb).split('\n'):
+                logger.error( l )
+            logger.error( "" )
+            logger.error( "################################################################################")
             logger.error( "################################################################################")
             logger.error( "" )
             logger.error( "" )
@@ -169,37 +217,43 @@ class AC3:
         logger.info( "################################################################################")
         logger.info( "" )
         try:
-            self.reasoning.disable( )
+            if self.reasoning is not None:
+                self.reasoning.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling reasoning: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         try:
-            self.movement.disable( )
+            if self.movement is not None:
+                self.movement.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling movement: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         try:
-            self.expression.disable( )
+            if self.expression is not None:
+                self.expression.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling expression: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         try:
-            self.vision.disable( )
+            if self.vision is not None:
+                self.vision.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling vision: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         try:
-            self.hearing.disable( )
+            if self.hearing is not None:
+                self.hearing.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling hearing: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         try:
-            self.server.disable( )
+            if self.server is not None:
+                self.server.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling server: " + str(ex) + " \n" + traceback.format_exc(tb))
@@ -216,30 +270,34 @@ class AC3:
 
         # Disable speech last so we can speak through all of it.
         try:
-            self.speech.disable( )
+            if self.speech is not None:
+                self.speech.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling speech: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         
         time.sleep( 1 )
+        logger.info( "" )
+        logger.info( "################################################################################")
+        logger.info( "################################################################################")
+        logger.info( "" )
         logger.info("Shutdown complete.")
+        logger.info( "" )
+        logger.info( "################################################################################")
+        logger.info( "################################################################################")
+        logger.info( "" )
 
         self.__isRunningNow = False
 
 
-logger.info("################################################################################")
-logger.info("")
-logger.info("                              Ancilla|Three")
-logger.info("")
-logger.info("################################################################################")
-logger.info("")
-
 ac3 = AC3( )
 
-# new=0 means open in old tab if possible
-# autoraise=True means make it come to the forefront
-webbrowser.open("http://localhost:8888", new=0, autoraise=True)
+
+if ac3.isRunning( ):
+    # new=0 means open in old tab if possible
+    # autoraise=True means make it come to the forefront
+    webbrowser.open("http://localhost:8888", new=0, autoraise=True)
 
 
 ################################################################################
@@ -252,14 +310,14 @@ webbrowser.open("http://localhost:8888", new=0, autoraise=True)
 # Run the sysetm
 ################################################################################
 
-'''
+
 ac3.movement.setServoAngle('neck_rotate', -10, 20)
 time.sleep(3)
 ac3.movement.setServoAngle('neck_rotate', 10, 20)
 time.sleep(5)
 ac3.movement.setServoAngle('neck_rotate', 0, 20)
 time.sleep(3)
-'''
+
 #ac3.shutdown()
 
 # Keep it going forever unless we shut down. This must be done in the main

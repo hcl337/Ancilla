@@ -34,6 +34,9 @@ class FaceRecognizer( ):
 
     def identifyFace( self, regionOfInterest):
 
+        if regionOfInterest is None or regionOfInterest.shape[0] == 0:
+            raise Exception("Empty region of interest sent to Face Recognizer.")
+
         gray = cv.cvtColor(regionOfInterest, cv.COLOR_BGR2GRAY)
 
         nbr_predicted, conf = self.alg.predict(gray)

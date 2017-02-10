@@ -9,7 +9,7 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-if 'raspberrypi' in os.uname()[1]:
+if 'Linux' in os.uname()[0]:
     import Adafruit_PCA9685
     isRaspberryPi = True
 else:

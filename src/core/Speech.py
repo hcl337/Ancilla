@@ -10,10 +10,11 @@ from threading import Timer, Thread
 
 logger = logging.getLogger(__name__)
 
-if 'raspberrypi' in os.uname()[1]:
+if 'Linux' in os.uname()[0]:
     from speech.RaspberryPiSpeech import RaspberryPiSpeech
     isRaspberryPi = True
 else:
+    print  os.uname()[0]
     from speech.MacSpeech import MacSpeech
     isRaspberryPi = False
 
@@ -75,7 +76,7 @@ class Speech:
 
 
     def say( self, words ):
-        logger.debug( "Adding sentence to queue: " + words)
+        #logger.debug( "Adding sentence to queue: " + words)
         # Create our thread
         self.phraseQueue.put( words )
 
@@ -110,11 +111,11 @@ class Speech:
     
                 phrase = self.phraseQueue.get( 0 )
     
-                logger.debug( "Saying Sentence from Queue: " + phrase)
+                logger.debug( "SPEAKING: " + phrase)
     
                 self.engine.sayAndWait(phrase)
     
-                logger.debug("Completed phrase: " + phrase )
+                #logger.debug("Completed phrase: " + phrase )
 
                 self.currentlySpeaking = False
 
@@ -125,5 +126,5 @@ class Speech:
                 #time.sleep( 0.2)
             except Exception as e:
                 self._isEnabled = False
-                self.AC3.reportFatalError( )            
+                self.AC3.reportFatalError( )
 

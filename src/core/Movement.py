@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Allow us to run this on other systems for programming by not enabling the hardware
 # components and libraries.
-if 'raspberrypi' in os.uname()[1]:
+if 'Linux' in os.uname()[0]:
     import Adafruit_PCA9685
     isRaspberryPi = True
 else:
@@ -223,13 +223,14 @@ class Movement:
                 # This is just a protection that should never be triggered. If it takes us
                 # waay too long, we need to log it and stop or we will crash the stack
                 if( sleepAmount < 0 ):
-                    raise Exception( "Servo update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
-                    self.disable()
+                    sleepAmount = 0
+                #    raise Exception( "Servo update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
+                #    self.disable()
     
                 time.sleep( sleepAmount )
         except Exception as e:
             self.updateLoopActive = None
-            self.AC3.reportFatalError( )            
+            self.AC3.reportFatalError( )
 
         print("Update end")
 
@@ -345,4 +346,10 @@ class Movement:
         else:
             pass
 
+logging.basicConfig(level=logging.DEBUG)
 
+
+move = Movement( None, "../../parameters/servos.json" )
+move.enable()
+move.setServoAngle("head_tilt", 10, 60 )
+time.sleep(5)
