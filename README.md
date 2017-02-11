@@ -57,6 +57,11 @@ One of the raspberry Pi's is for core processing and the other will be dedicated
 One of the biggest challenges in embedded systems is being able to understand and interact with them successfully. Therefore, I am going to expose the key elements in a password protected web interface.
 
 
+To change the password for the web server interface, run this below in the ```/src/webserver``` directory.
+```
+python -c "import hashlib; import getpass; print(hashlib.sha512(getpass.getpass())).hexdigest()" > password.txt
+```
+
 ## Processing Code Libraries
 
 * [Tornado python web server](http://www.tornadoweb.org/)
@@ -125,7 +130,7 @@ A few things I have seen online:
 ------------------------------------------------------------------------------------------------------
 # Speaking
 
-There are mupltiple 
+There are mupltiple
 
 ## TTS Tutorials and resources
 * [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)

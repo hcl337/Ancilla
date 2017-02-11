@@ -69,14 +69,14 @@ class AC3:
             logger.info("")
             logger.info("######################################## VISION")
             self.vision = Vision( self )
-            #self.vision.enable( )
+            self.vision.enable( )
             #self.speech.say( "Vision")
     
             logger.info("")
             logger.info("")
             logger.info("######################################## HEARING")
             self.hearing = Hearing( self )
-            #self.hearing.enable( )
+            self.hearing.enable( )
     
             logger.info("")
             logger.info("")
@@ -310,14 +310,14 @@ if ac3.isRunning( ):
 # Run the sysetm
 ################################################################################
 
-
+'''
 ac3.movement.setServoAngle('neck_rotate', -10, 20)
 time.sleep(3)
 ac3.movement.setServoAngle('neck_rotate', 10, 20)
 time.sleep(5)
 ac3.movement.setServoAngle('neck_rotate', 0, 20)
 time.sleep(3)
-
+'''
 #ac3.shutdown()
 
 # Keep it going forever unless we shut down. This must be done in the main

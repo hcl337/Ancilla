@@ -51,6 +51,9 @@ class Movement:
 
         logger.info('Initializing muscles...')
 
+        if not isRaspberryPi:
+            self.AC3.speech.say("Movement disabled on OSX.")
+
         # Load all the parameters for the servos from our setup file. This is a JSON
         # file which describes all the parameters and has values for each of them
         with open(servoParamsFilePath) as f:
@@ -66,7 +69,9 @@ class Movement:
         for servo in servos:
             logger.info(self.servoState['servos'][servo])
             servos[servo]['requested_angle'] = servos[servo]['resting_angle']
-            servos[servo]['current_angle'] = servos[servo]['resting_angle']
+            # We have to tell the system we have a little ways to go so it
+            # moves us
+            servos[servo]['current_angle'] = servos[servo]['resting_angle'] - 0.1
             servos[servo]['requested_speed'] = 10
             servos[servo]['current_speed'] = 10
 
@@ -269,8 +274,8 @@ class Movement:
             else:
                 increment = distance_to_increment
 
-            servo['current_angle'] = round(servo['current_angle'] + increment, 3)
-            servo['current_speed'] = abs( round(increment / interval, 2))
+            servo['current_angle'] = round(servo['current_angle'] + increment, 4)
+            servo['current_speed'] = abs( round(increment / interval, 4))
 
             # If we are really close, don't let little numbers creep in. Just set it to the correct one.
             if abs(servo['current_angle'] - servo['requested_angle']) < 0.01:
@@ -346,10 +351,12 @@ class Movement:
         else:
             pass
 
+'''
 logging.basicConfig(level=logging.DEBUG)
 
 
 move = Movement( None, "../../parameters/servos.json" )
 move.enable()
-move.setServoAngle("head_tilt", 10, 60 )
+move.setServoAngle("head_tilt", -10, 60 )
 time.sleep(5)
+'''

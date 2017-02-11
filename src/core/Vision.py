@@ -73,7 +73,9 @@ class Vision( ):
         self.environmentCamera = cv.VideoCapture(0)
 
         if not self.environmentCamera.isOpened( ):
-            raise Exception("Could not open environment camera.")
+            self.AC3.speech.say("Vision disabled. No environment camera found.")
+            return
+            #raise Exception("Could not open environment camera.")
 
         '''
         self.focusCamera = cv.VideoCapture(0)

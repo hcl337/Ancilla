@@ -109,6 +109,8 @@ class Hearing( ):
                 hmmLocation + " -lm " + lmLocation + " -dict " + \
                 dictLocation + " -samprate 16000/8000/4000 -inmic yes -logfn /dev/null"
 
+            logger.debug("Command for sphinx: " + command )
+
             command = command.split(" ")
 
             # Kick off the actual process so we can wait
@@ -150,7 +152,8 @@ class Hearing( ):
             error = self.hearingProcess.stderr.read( )
             if len(error) != 0:
                 if 'Error opening audio device' in error:
-                    raise Exception("Hearing process could not find a microphone")
+                    self.AC3.speech.say("Hearing disabled. No microphone found.")
+                    #raise Exception("Hearing process could not find a microphone")
                 else:
                     raise Exception("Hearing process crashed. Reason specified is " + str(error) )
             
