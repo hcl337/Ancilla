@@ -10,7 +10,6 @@ class RaspberryPiSpeech:
 
 
     def sayAndWait( self, phrase ):
-        print("Should say: " + phrase)
         #print "flite"
         #os.popen('flite -t "' + phrase + '"').read()
         #print "festival"

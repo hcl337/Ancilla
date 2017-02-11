@@ -48,19 +48,8 @@ class Vision( ):
         '''
         Creates and connects to as many capture devices as possible
         '''
-        try:
-            self.environmentCamera = cv.VideoCapture(0)
-        except Exception as e:
-            logger.error("Can not connect to environment camera: " + str(e))
 
-        '''
-        try:
-            self.focusCamera = cv.VideoCapture(1)
-            print self.focusCamera
-        except Exception as e:
-            logger.error("Can not connect to focus camera: " + str(e))
-
-        '''
+        
 
         self.faceDetector = FaceDetector()
         self.faceRecognizer = FaceRecognizer()
@@ -80,6 +69,20 @@ class Vision( ):
             return
 
         self._isEnabled = True
+
+        self.environmentCamera = cv.VideoCapture(0)
+
+        if not self.environmentCamera.isOpened( ):
+            self.AC3.speech.say("Vision disabled. No environment camera found.")
+            return
+            #raise Exception("Could not open environment camera.")
+
+        '''
+        self.focusCamera = cv.VideoCapture(0)
+
+        if not self.focusCamera.isOpened( ):
+            raise Exception("Could not open focus camera.")
+        '''
 
         if self.focusCamera != None:
             # Create our thread for updating the focus camera
@@ -106,7 +109,7 @@ class Vision( ):
 
         # This may seem like a hack, but basically what it is doing
         # is just waiting for this loop of vision to complete fully
-        # so we don't have to worry about partial frames being 
+        # so we don't have to worry about partial frames being
         # processed
         time.sleep( 0.5 )
 
@@ -157,7 +160,7 @@ class Vision( ):
 
     def getVisibleObjects( self ):
         '''
-        This is the list of all the objects which are 
+        This is the list of all the objects which are
         visible currently
         '''
         return copy.deepcopy( self.visualObjects )
@@ -227,7 +230,7 @@ class Vision( ):
                 time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False
-            self.AC3.reportFatalError( )            
+            self.AC3.reportFatalError( )
 
 
 
@@ -240,7 +243,7 @@ class Vision( ):
         interval = 1.0 / self.FRAME_RATE
         logger.info("Setting focus camera Update Interval to " + str(round(1/interval)) + " hz.")
 
-        try:    
+        try:
     
             # If we have stopped this loop then de-activate the cameras before we do anything else
             while( self._isEnabled ):
@@ -267,7 +270,7 @@ class Vision( ):
                 time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False
-            self.AC3.reportFatalError( )            
+            self.AC3.reportFatalError( )
 
 
 
@@ -275,10 +278,11 @@ class Vision( ):
 
         if self.focusCamera != None:
             ret, fullFrame = self.focusCamera.read()
-            self.latestFocusFrame = fullFrame.copy()
-
-        for fn in self.focusListeners:
-            fn()     
+            if (fullFrame != None) and (fullFrame.shape[0] > 0):
+                self.latestFocusFrame = fullFrame.copy()
+    
+                for fn in self.focusListeners:
+                    fn()
 
 
 
@@ -288,11 +292,11 @@ class Vision( ):
 
         if self.environmentCamera != None:
             ret, fullFrame = self.environmentCamera.read()
-            if fullFrame != None:
+            if (fullFrame != None) and (fullFrame.shape[0] > 0):
                 self.latestEnvironmentFrame = fullFrame.copy()
 
-        for fn in self.environmentListeners:
-            fn()     
+                for fn in self.environmentListeners:
+                    fn()
 
 
 '''

@@ -43,7 +43,7 @@ class FaceDetector( ):
 
     def detect( self, frame ):
         '''
-        Returns an array of dictionaries where each element is a list of 
+        Returns an array of dictionaries where each element is a list of
             'x': [0..frame width]
             'y': [0..frame height]
             'width': [0..height] - It detects a square bounding box so is limited
@@ -53,6 +53,8 @@ class FaceDetector( ):
             'orientation': ['frontal', 'profile'] - the type of detector which
                 found this face.
         '''
+        if frame is None or frame.shape[0] == 0:
+            raise Exception("Empty image sent to Face Detector.")
 
         # Resize the frame to be smaller
         smallFrame = cv2.resize(frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_LINEAR)

@@ -40,7 +40,7 @@ class Hearing( ):
         # thread and try to guarantee an exit
         atexit.register(self.disable)
 
-        # If we accidentally leave open pocket sphinx we need to 
+        # If we accidentally leave open pocket sphinx we need to
         # close it so we don't keep multiple around.
         PROCNAME = "pocketsphinx_continuous"
         for proc in psutil.process_iter():
@@ -72,13 +72,25 @@ class Hearing( ):
             #self.hearingProcess.kill()
             pid = self.hearingProcess.pid
             self.hearingProcess = None
+            
+            if self.__checkIfProcessExists( pid ):
+                logger.debug("PID for hearing process to shut down: " + str( pid ))
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+                time.sleep( 3 )
 
-            logger.debug("PID for hearing process to shut down: " + str( pid ))
-            os.killpg(os.getpgid(pid), signal.SIGTERM)
-            time.sleep( 3 )
 
-
-
+    def __checkIfProcessExists( self, pid ):
+        try:
+            # This doesn't actually kill the process. It just
+            # tests if it is there.
+            os.kill(pid, 0)
+        except OSError:
+            return False
+        else:
+            return True
+        
+        
+        
     def registerListener( self, listener ):
         self.callbacks.append(listener)
 
@@ -97,12 +109,14 @@ class Hearing( ):
                 hmmLocation + " -lm " + lmLocation + " -dict " + \
                 dictLocation + " -samprate 16000/8000/4000 -inmic yes -logfn /dev/null"
 
+            logger.debug("Command for sphinx: " + command )
+
             command = command.split(" ")
 
             # Kick off the actual process so we can wait
-            self.hearingProcess = subprocess.Popen(command, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+            self.hearingProcess = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
-            # Grab stdout line by line as it becomes available.  This will loop until 
+            # Grab stdout line by line as it becomes available.  This will loop until
             # p terminates.
             while self.hearingProcess and self.hearingProcess.poll() == None:
 
@@ -111,10 +125,14 @@ class Hearing( ):
 
                 # We get a lot of garbage back from the system so don't report it
                 phrase = phrase.strip()
+
+                if 'Error opening audio device' in phrase:
+                    raise Exception("Could not connect to microphone: " + phrase )
+                
                 if phrase.startswith("INFO: ") or len( phrase ) == 0:
                     continue
 
-                # We have a problem that we could be listening to ourselves. We don't want to do that! 
+                # We have a problem that we could be listening to ourselves. We don't want to do that!
                 # Therefore there is a gap between when it speaks and when we will say we heard something
                 if time.time() - self.AC3.speech.timeSinceLastSpoke() < MIN_TIME_AFTER_I_SPEAK_TO_LISTEN:
                     #logger.info("Not reporting words because AC3 just spoke: " + str(self.AC3.speech.timeSinceLastSpoke()))
@@ -122,11 +140,22 @@ class Hearing( ):
 
                 # Send the event out to all of our listeners
                 for fn in self.callbacks:
-                    fn(phrase)     
+                    fn(phrase)
 
-            # When the subprocess terminates there might be unconsumed output 
+            # When the subprocess terminates there might be unconsumed output
             # that still needs to be processed.
             if self.hearingProcess != None:
-                self.hearingProcess.stdout.read()    
+                self.hearingProcess.stdout.read()
+            
+            # Also see if we had any errors. This could be the reason we shut down so raise an exception
+            # if we saw one
+            error = self.hearingProcess.stderr.read( )
+            if len(error) != 0:
+                if 'Error opening audio device' in error:
+                    self.AC3.speech.say("Hearing disabled. No microphone found.")
+                    #raise Exception("Hearing process could not find a microphone")
+                else:
+                    raise Exception("Hearing process crashed. Reason specified is " + str(error) )
+            
         except:
             self.AC3.reportFatalError()

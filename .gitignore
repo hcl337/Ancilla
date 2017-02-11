@@ -90,3 +90,5 @@ ENV/
 
 src/core/vision/resources/**/*.png
 src/core/vision/resources/**/*.jpg
+
+*.caret

@@ -26,7 +26,8 @@ The overall goal is to mimic simple human social interaction:
 ------------------------------------------------------------------------------------------------------
 # Running the system
 
-1. Run /setup/setup.bash to install all of the dependencies
+0. Check out code base
+1. Install all dependencies [from setup script](SETUP.md).
 2. Run /src/alive.py to start the robot
 3. In your browser, connect to the IP address to watch what is happening
 
@@ -56,9 +57,16 @@ One of the raspberry Pi's is for core processing and the other will be dedicated
 One of the biggest challenges in embedded systems is being able to understand and interact with them successfully. Therefore, I am going to expose the key elements in a password protected web interface.
 
 
+To change the password for the web server interface, run this below in the ```/src/webserver``` directory.
+```
+python -c "import hashlib; import getpass; print(hashlib.sha512(getpass.getpass())).hexdigest()" > password.txt
+```
+
 ## Processing Code Libraries
 
 * [Tornado python web server](http://www.tornadoweb.org/)
+
+
 
 ------------------------------------------------------------------------------------------------------
 # Vision
@@ -73,6 +81,12 @@ The system will use two cameras to enable both full environment awareness and ta
 ## Vision Code Libraries
 * [Raspberry Pi Tornado Websocket video server code](https://github.com/patrickfuller/camp/blob/master/server.py)
 
+## Raspberry Pi Vision Install
+'''
+sudo apt-get install python-opencv libjpeg-dev
+
+
+'''
 ------------------------------------------------------------------------------------------------------
 # Movement
 
@@ -116,7 +130,7 @@ A few things I have seen online:
 ------------------------------------------------------------------------------------------------------
 # Speaking
 
-There are mupltiple 
+There are mupltiple
 
 ## TTS Tutorials and resources
 * [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
