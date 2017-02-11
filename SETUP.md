@@ -28,6 +28,8 @@ read -n1 -r -p "Then press spacebar to continue..."
 
 sudo pip install requests
 sudo pip install psutil
+sudo pip install inflection
+
 
 ################################################################################
 # WEB SERVER
@@ -164,10 +166,10 @@ Open /boot/cmdline.txt and add ```dwc_otg.speed=1``` to make it reset everyting 
 * Test by recording
 *
 ------------------------------------------------------------------------------------------------------
-# Mac Setup Script
+# Mac OSX Setup Script
 To enable easy development, most of the functionality can be executed on a Mac except for the motors which are virtual.
 
-This takes advantage of brew for many of the tasks.
+This takes advantage of brew and pip for most of the tasks.
 
 ```sh
 ################################################################################
@@ -191,6 +193,8 @@ read -n1 -r -p "Then press spacebar to continue..."
 sudo pip install pyobjc
 sudo pip install requests
 sudo pip install psutil
+sudo pip install inflection
+
 
 ################################################################################
 # WEB SERVER
@@ -218,7 +222,8 @@ sudo pip install scipy
 # SERVOS
 ################################################################################
 
-# Nothing is installed given it is virtual
+# Nothing is installed given it is virtual.
+
 
 ################################################################################
 # TTS VOICE

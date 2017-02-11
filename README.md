@@ -130,7 +130,10 @@ A few things I have seen online:
 ------------------------------------------------------------------------------------------------------
 # Speaking
 
-There are mupltiple
+There are multiple 
+
+### Parts
+* Small speaker
 
 ## TTS Tutorials and resources
 * [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
@@ -141,6 +144,7 @@ There are mupltiple
 ------------------------------------------------------------------------------------------------------
 # Hearing
 
+### Parts
 There are two ways that speech recognition can be implemented. Either local(Sphinx) or cloud based (Amazon, Google). Cloud-based recognition will always be more accurate however there is a larger delay between speech and recognition. If local recognition is to be used, then a small vocabulary should be specified.
 
 ## Speech Recognition Libraries
