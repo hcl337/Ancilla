@@ -69,6 +69,25 @@ class Reasoning:
             self.AC3.movement.setServoAngle('head_tilt', 20, 60)
         elif 'look down' in phrase:
             self.AC3.movement.setServoAngle('head_tilt', -20, 60)
+        elif ' do you see' in phrase or 'do you see anyone' in phrase:
+            objs = self.AC3.vision.getVisibleObjects( )['faces']
+
+            s = "I see " + str(len(objs)) + " faces."
+
+            if len(objs) == 1:
+                s = s.replace( "faces.", "face.")
+
+            for o in objs:
+                if o['name'] != None:
+                    s += "I think I see " + o['name'] +".\n\n"
+                else:
+                    s += "I don't know who it is.\n\n"
+
+                if o['orientation'] == "frontal":
+                    s += "They are looking at me.\n\n"
+                else:
+                    s += "They are not looking at me.\n\n"
+            self.AC3.speech.say(s)
         elif 'good morning' in phrase:
             self.AC3.speech.say( "It is a good morning!")
         elif 'wife' in phrase:

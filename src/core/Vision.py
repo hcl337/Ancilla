@@ -18,6 +18,7 @@ class Vision( ):
     so that people can access teh data from them
     '''
 
+    # OpenCV VideoCapture objects
     focusCamera = None
     environmentCamera = None
 
@@ -36,6 +37,7 @@ class Vision( ):
     focusListeners = []
     environmentListeners = []
 
+    # List of objects which are currently in view as of the last frame
     visualObjects = {}
 
     faceDetector = None
@@ -49,13 +51,10 @@ class Vision( ):
         Creates and connects to as many capture devices as possible
         '''
 
-        
-
         self.faceDetector = FaceDetector()
         self.faceRecognizer = FaceRecognizer()
         self.registerEnvironmentFrameListener( self.computeCoreEnvironment )
         self.AC3 = AC3
-
 
 
 
@@ -77,12 +76,12 @@ class Vision( ):
             return
             #raise Exception("Could not open environment camera.")
 
-        '''
+        
         self.focusCamera = cv.VideoCapture(0)
 
         if not self.focusCamera.isOpened( ):
-            raise Exception("Could not open focus camera.")
-        '''
+            self.AC3.speech.say("WARNING: No focus camera found.")
+        
 
         if self.focusCamera != None:
             # Create our thread for updating the focus camera
@@ -107,14 +106,8 @@ class Vision( ):
         '''
         self._isEnabled = False
 
-        # This may seem like a hack, but basically what it is doing
-        # is just waiting for this loop of vision to complete fully
-        # so we don't have to worry about partial frames being
-        # processed
-        time.sleep( 0.5 )
-
         # Wait until the thread is fully done before returning
-        time.sleep( 1 / self.FRAME_RATE + 0.1 )
+        time.sleep( 1 / self.FRAME_RATE + 0.25 )
 
         if self.focusCamera != None:
             self.focusCamera.release()
@@ -125,26 +118,67 @@ class Vision( ):
 
 
     def isEnabled( self ):
+        '''
+        Returns true if vision is currently enabled with the update
+        loop running. If it returns false it is either because the
+        system was never enabled or there was an error which made the
+        loop cancel
+        '''
         return self._isEnabled
 
 
-
     def registerFocusFrameListener( self, listener ):
+        '''
+        Register a listener method who will be called each time
+        a new focus fram is received. It should then call 
+        AC3.vision.getLatestFocusFrame( ) to get the frame
+
+        '''
         self.focusListeners.append( listener )
 
 
 
+    def unRegisterFocusFrameListener( self, listener ):
+        '''
+        Removes the specified listener method if it is currently
+        registered or does nothing if it is not.
+        
+        '''
+        self.focusListeners.remove( listener )
+
+
+
     def registerEnvironmentFrameListener( self, listener ):
+        '''
+        Register a listener method who will be called each time
+        a new environment fram is received. It should then call 
+        AC3.vision.getLatestEnvironmentFrame( ) to get the frame
+        
+        '''
         self.environmentListeners.append( listener )
 
-    def unregisterEnvironmentFrameListener( self, listener ):
+
+
+    def unRegisterEnvironmentFrameListener( self, listener ):
+        '''
+        Removes the specified listener method if it is currently
+        registered or does nothing if it is not.
+
+        '''
         if listener in self.environmentListeners:
             self.environmentListeners.remove( listener )
 
 
 
     def getLatestFocusFrame( self ):
+        '''
+        Returns a reference to the latest focus frame. Note that
+        this is the real frame so please do not mutate it.
 
+        If there is no frame yet or it is not enabled, then None
+        is returned. This should always be checked before use.
+
+        '''
         if not self.isEnabled( ):
             return None
         return self.latestFocusFrame
@@ -152,23 +186,36 @@ class Vision( ):
 
 
     def getLatestEnvironmentFrame( self ):
+        '''
+        Returns a reference to the latest environment frame. Note that
+        this is the real frame so please do not mutate it.
+
+        If there is no frame yet or it is not enabled, then None
+        is returned. This should always be checked before use.
+        
+        '''
 
         if not self.isEnabled( ):
             return None
         return self.latestEnvironmentFrame
 
 
+
     def getVisibleObjects( self ):
         '''
         This is the list of all the objects which are
-        visible currently
+        visible currently and their bounds.
         '''
         return copy.deepcopy( self.visualObjects )
 
 
 
     def computeCoreEnvironment( self ):
+        '''
+        This computes faces, recognition and other visual elements
+        on each frame it is triggered on. It is a heavy duty method
 
+        '''
         visualObjects = {}
 
         img = self.getLatestEnvironmentFrame()
@@ -196,6 +243,8 @@ class Vision( ):
 
     def __updateEnvironmentLoop( self ):
         '''
+        Loop which waits for each frame and updates everything
+        when the next frame comes in
         '''
 
         interval = 1.0 / self.FRAME_RATE
@@ -234,12 +283,12 @@ class Vision( ):
 
 
 
-
     def __updateFocusLoop( self ):
         '''
-        '''
-        #print("Update loop")
+        Loop which waits for each frame and updates everything
+        when the next frame comes in
 
+        '''
         interval = 1.0 / self.FRAME_RATE
         logger.info("Setting focus camera Update Interval to " + str(round(1/interval)) + " hz.")
 
@@ -275,7 +324,10 @@ class Vision( ):
 
 
     def __updateFocusFrame( self ):
+        '''
+        Calls all the listeners on a copy of the latest frame
 
+        '''
         if self.focusCamera != None:
             ret, fullFrame = self.focusCamera.read()
             if (fullFrame != None) and (fullFrame.shape[0] > 0):
@@ -287,8 +339,10 @@ class Vision( ):
 
 
     def __updateEnvironmentFrame( self ):
-
-        #logger.debug("Updating env frame. Listeners: " + str(len(self.environmentListeners)))
+        '''
+        Calls all the listeners on a copy of the latest frame
+        
+        '''
 
         if self.environmentCamera != None:
             ret, fullFrame = self.environmentCamera.read()

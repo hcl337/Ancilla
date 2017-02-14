@@ -50,6 +50,7 @@ class AC3:
         try:
             startTime = time.time( )
     
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## SPEECH")
@@ -57,7 +58,7 @@ class AC3:
             self.speech.enable( )
             #self.speech.say( "Speech Enabled" )
             #self.speech.say( "Booting AC-3 Operating system." )
-    
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## EXPRESSION")
@@ -77,7 +78,7 @@ class AC3:
             logger.info("######################################## HEARING")
             self.hearing = Hearing( self )
             self.hearing.enable( )
-    
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## MOVEMENT")
@@ -85,11 +86,12 @@ class AC3:
             self.movement.enable( )
             #self.speech.say( "Movement")
     
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## REASONING")
             self.reasoning = Reasoning( self )
-    
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## WEB SERVER")

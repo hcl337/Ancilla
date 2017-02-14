@@ -29,7 +29,8 @@ read -n1 -r -p "Then press spacebar to continue..."
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
-
+# Help docs in markdown for the API
+sudo pip install gfm
 
 ################################################################################
 # WEB SERVER
@@ -194,6 +195,8 @@ sudo pip install pyobjc
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
+# Help docs in markdown for the API
+sudo pip install gfm
 
 
 ################################################################################

@@ -28,7 +28,7 @@ The overall goal is to mimic simple human social interaction:
 
 0. Check out code base
 1. Install all dependencies [from setup script](SETUP.md).
-2. Run /src/alive.py to start the robot
+2. Run ```python src/AC3.py``` to start the robot
 3. In your browser, connect to the IP address to watch what is happening
 
 ------------------------------------------------------------------------------------------------------
@@ -56,6 +56,7 @@ One of the raspberry Pi's is for core processing and the other will be dedicated
 
 One of the biggest challenges in embedded systems is being able to understand and interact with them successfully. Therefore, I am going to expose the key elements in a password protected web interface.
 
+Here is the [API documentation](API.md).
 
 To change the password for the web server interface, run this below in the ```/src/webserver``` directory.
 ```

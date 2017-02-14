@@ -7,6 +7,8 @@ import base64
 import hashlib
 import time
 import json
+import misaka
+import gfm
 from threading import Thread
 import tornado.web
 import tornado.websocket
@@ -17,7 +19,8 @@ import cv2 as cv
 logger = logging.getLogger(__name__)
 
 
-SERVER_FILE_ROOT = os.path.normpath(os.path.dirname(__file__) + "/assets")
+SERVER_FILE_ROOT = os.path.normpath(os.path.dirname(__file__) + "/static")
+DOC_PATH = os.path.join(SERVER_FILE_ROOT, "../../../API.md")
 
 COOKIE_NAME = "AC-3"
 
@@ -35,12 +38,14 @@ with open(os.path.join(SERVER_FILE_ROOT + "/..", "password.txt")) as in_file:
 class IndexHandler(tornado.web.RequestHandler):
 
     def get(self):
-
+        '''
+        Returns the main web page or makes people log in.
+        '''
         logger.debug("IndexHandler: GET")
         if not self.get_secure_cookie(COOKIE_NAME):
             self.redirect("/login")
         else:
-            self.render("assets/index.html", port=port)
+            self.render("static/index.html", port=port)
 
 
 class ShutdownHandler(tornado.web.RequestHandler):
@@ -55,15 +60,40 @@ class ShutdownHandler(tornado.web.RequestHandler):
         else:
             self.write("Shutting down AC3....")
             self.finish()
-
             self.AC3.shutdown( )
+
+
+class Docs(tornado.web.RequestHandler):
+
+    doc = ""
+
+    def initialize( self ):
+        with open( DOC_PATH ) as f:
+            with open( os.path.join(SERVER_FILE_ROOT,'style/markdown-outer.html') ) as outer:
+                words =  gfm.markdown( f.read() )
+
+                # Make code format correctly
+                words = words.replace('</code></p>', '</code></pre>')
+                words = words.replace('<p><code>', '<pre><code>')
+                # Get rid of the js tags on it
+                words = words.replace('<code>js', '<code>')
+
+                self.doc = outer.read().replace("{{MARKDOWN}}", words) 
+
+
+    def get(self):
+        if not self.get_secure_cookie(COOKIE_NAME):
+            self.redirect("/login")
+        else:
+            self.write( self.doc )
+
 
 
 class LoginHandler(tornado.web.RequestHandler):
 
     def get(self):
         logger.debug("LoginHandler: GET")
-        self.render("assets/login.html")
+        self.render("static/login.html")
 
     def post(self):
         password = self.get_argument("password", "")
@@ -75,6 +105,8 @@ class LoginHandler(tornado.web.RequestHandler):
             self.redirect(u"/login?error")
 
 
+from handlers import *
+
 class WebSocket(tornado.websocket.WebSocketHandler):
 
     # Reference to our movement object
@@ -83,70 +115,87 @@ class WebSocket(tornado.websocket.WebSocketHandler):
     def initialize( self, AC3 ):
         self.AC3 = AC3
 
+        try:
+            # Add all of our websocket message handlers here
+            self.__registerMessageHandler( SendEnvironmentCameraHandler.SendEnvironmentCameraHandler( self, AC3 ) )
+            self.__registerMessageHandler( SendFocusCameraHandler.SendFocusCameraHandler( self, AC3 ) )
+            self.__registerMessageHandler( SendStateHandler.SendStateHandler( self, AC3 ) )
+            self.__registerMessageHandler( SetFocusCameraTrackingRegionOfInterestHandler.SetFocusCameraTrackingRegionOfInterestHandler( self, AC3 ) )
+            self.__registerMessageHandler( SetServoPosition.SetServoPosition( self, AC3 ) )
+            self.__registerMessageHandler( ShutdownHandler.ShutdownHandler( self, AC3 ) )
+
+        except:
+            AC3.reportFatalError( )
+
+
+
+    def open(self):
+        '''
+        Only open if we are already signed in
+
+        '''
+        if not self.get_secure_cookie(COOKIE_NAME):
+            return None
+
+
+
+    messageHandlers = []
+
+    def __registerMessageHandler( self, handler ):
+
+        self.messageHandlers.append( handler )
+
+
+
+    def on_close( self ):
+        '''
+        When they request a close or we are disconnected
+        make sure that we stop all of the data which was
+        coming in
+
+        '''
+        for handler in self.messageHandlers:
+            handler.stopHandling( )
+
+
 
     def on_message(self, message):
+
+        logger.debug("Received Websocket Message: " + str(message))
         try:
+            try:
+                message = json.loads( message )
+            except:
+                self.write_message(json.dumps)
 
-            logger.debug("WebSocket: on_message: " + str(message))
-            """Evaluates the function pointed to by json-rpc."""
+            # First make sure it has the message tag in it we use
+            if not 'message' in message:
+                returnMessage = {"message": "error", "type": "UnsupportedMessage", "description":"Message must have 'message' element with name of message."}
+                self.write_message( json.dumps(returnMessage))
+                return False
 
-            if message == "read_state":
-                logger.debug("Starting to broadcast state")
-                self.state_loop = PeriodicCallback(self.stateLoop, 100)
-                self.state_loop.start()
-            # Start an infinite loop when this is called
-            elif message == "read_environment_camera":
-                logger.debug("Starting to broadcast environment camera")
-                self.AC3.vision.registerEnvironmentFrameListener( self.environmentCameraLoop )
-                #self.camera_loop = PeriodicCallback(self.loop, 5)
-                #self.camera_loop.start()
-            else:
-                logger.error("Received unexpected websocket message: " + str(message))
+            # Loop through all handlers and see if one of them can process it
+            wasHandled = False
+            for handler in self.messageHandlers:
+                if handler.canHandle( message ):
+                    handler.handle( message )
+                    wasHandled = True
+                    break
+
+            # Handle error if no supported message handler exists
+            if not wasHandled:
+                returnMessage = {"message": "error", "type": "UnsupportedMessage", "description":"Unknown Message Type: " + message['message']}
+                self.write_message( json.dumps(returnMessage))
+
+        except ValueError as e:
+            logger.error("Could not decode message: " + str(message))
+            returnMessage = {"message": "error", "type": "ValueError", "description":"Could not parse incoming message. Must be a JSON dictionary with at least {'message':'name'}"}
+            self.write_message( json.dumps(returnMessage))
         except WebSocketClosedError:
             logger.error("Websocket connection disconnected")
             raise
         except:
             self.AC3.reportFatalError()
-
-
-
-    def environmentCameraLoop(self):
-
-        try:
-            print("Send environment camera loop")
-
-            im = self.AC3.vision.getLatestEnvironmentFrame( )
-            cnt = cv.imencode('.jpg',im)[1]
-            b64 = base64.encodestring(cnt)        
-
-            message = {
-                "data": base64.encodestring(cnt),
-                "type": "environment_camera",
-            }
-
-            self.write_message( message )
-        except WebSocketClosedError:
-            logger.error("Websocket connection disconnected")
-            self.AC3.vision.unregisterEnvironmentFrameListener( self.environmentCameraLoop )            
-        except:
-            self.AC3.reportFatalError()
-
-
-
-    def stateLoop(self):
-        try:
-            data = {
-                "movement": self.AC3.movement.getState(),
-                "memory": self.AC3.reasoning.getMemory(),
-                "vision": self.AC3.vision.getVisibleObjects()
-            }
-            self.write_message({"type":"state", "data": data})
-        except tornado.websocket.WebSocketClosedError as e:
-            logger.error("WebsocketError in stateloop WebSocket: " + str(e))
-            self.state_loop.stop()
-        except Exception as e:
-            self.state_loop.stop()
-            logger.error("Error in stateloop WebSocket: " + str(e))
 
 
 
@@ -168,6 +217,7 @@ class AC3Server( ):
             (r"/login", LoginHandler),\
             (r"/shutdown", ShutdownHandler, {'AC3': AC3}),\
             (r"/websocket", WebSocket, {'AC3': AC3}), \
+            (r"/docs", Docs ), \
             (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': SERVER_FILE_ROOT})]
 
         self.application = tornado.web.Application(handlers, cookie_secret=PASSWORD)
@@ -189,7 +239,7 @@ class AC3Server( ):
                 opener.addheaders.append(('Cookie', COOKIE_NAME + '=' + PASSWORD))
                 f = opener.open("http://localhost:" + str(port) + "/shutdown")
                 logger.info("\tWaiting for old server to exit...")
-                time.sleep(1)
+                time.sleep(5)
         except urllib2.HTTPError as e:
             logger.info("\tHTTP: " + str(e))
         except urllib2.URLError as e:
@@ -199,9 +249,13 @@ class AC3Server( ):
         except httplib.BadStatusLine as e:
             logger.info("\tOld server disconnected: Bad status line")
 
+        time.sleep(1)
+
+
 
 
     def __ioloop( self ):
+        logger.info("Starting WebServer on port " + str(port))
         self.application.listen(port)
         tornado.ioloop.IOLoop.instance().start()
 
