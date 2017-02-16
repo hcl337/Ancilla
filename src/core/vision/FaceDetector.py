@@ -91,13 +91,13 @@ class FaceDetector( ):
             if self.shouldAppend(faceList, newFace):
                 faceList.append( newFace )
             else:
-                logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
+                pass#logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
         for (x, y, w, h) in facesProfiles:
             newFace = {'x': int(x/SCALE), 'y': int(y/SCALE), 'width': int(w/SCALE), 'height': int(h/SCALE), 'orientation':'profile'} 
             if self.shouldAppend(faceList, newFace):
                 faceList.append( newFace )
             else:
-                logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
+                pass#logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
 
         return faceList
 

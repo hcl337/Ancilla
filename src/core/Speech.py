@@ -114,6 +114,9 @@ class Speech:
                 logger.debug( "SPEAKING: " + phrase)
     
                 self.engine.sayAndWait(phrase)
+
+                # Add a little break between utterances
+                time.sleep(0.5)
     
                 #logger.debug("Completed phrase: " + phrase )
 

@@ -80,7 +80,10 @@ The system will use two cameras to enable both full environment awareness and ta
 * 1x = Raspberry Camera with narrow lens mounted in the robot's eye which is actuated by the servos to create direct eye contact with objects and accurate tracking.
 
 ## Vision Code Libraries
-* [Raspberry Pi Tornado Websocket video server code](https://github.com/patrickfuller/camp/blob/master/server.py)
+* [opencv k-means clustering](http://seiya-kumada.blogspot.com/2013/03/k-means-clustering.html)
+* [python implementation](https://gist.github.com/amueller/2956759) 
+* [Python OpenCV k-means](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_ml/py_kmeans/py_kmeans_opencv/py_kmeans_opencv.html)
+* [meanshift and camshift](http://docs.opencv.org/3.2.0/db/df8/tutorial_py_meanshift.html) allows for easier tracking of known blobs such as objects and faces
 
 ## Raspberry Pi Vision Install
 '''

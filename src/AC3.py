@@ -110,7 +110,7 @@ class AC3:
 
         # If we didn't crash, report that we are ready to go
         if self.isRunning( ):
-            self.speech.say( "Ready in " + str(round(endTime-startTime, 2 )) + " seconds.")
+            self.speech.say( "Booted fully in " + str(round(endTime-startTime, 2 )) + " seconds.")
                 
             logger.info("Completed initializing AC3")
             logger.info("")
