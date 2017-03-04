@@ -3,7 +3,7 @@ from AbstractHandler import AbstractHandler
 import logging
 logger = logging.getLogger(__name__)
 
-class SetServoPosition( AbstractHandler ):
+class HandleSetServoPosition( AbstractHandler ):
 
     def canHandle( self, message ):
         return 'set_servo_position' == message['message']

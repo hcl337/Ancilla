@@ -4,14 +4,19 @@ from tornado.ioloop import PeriodicCallback
 from tornado.websocket import WebSocketClosedError
 import tornado
 import logging
+import time
 logger = logging.getLogger(__name__)
 
 
-class SendStateHandler( AbstractHandler ):
+class HandleSendState( AbstractHandler ):
     '''
 
     '''
-    state_loop = None
+
+    def __init__(self, websocketHandler, AC3 ):
+        super(HandleSendState, self).__init__(websocketHandler, AC3)
+        self.state_loop = None
+
 
     def canHandle( self, message ):
         return message['message'] == 'send_state'
@@ -41,6 +46,7 @@ class SendStateHandler( AbstractHandler ):
 
     def stopHandling( self ):
         if self.state_loop is not None:
+            logger.debug("Stopped previous output of send state.")
             self.state_loop.stop()
             self.state_loop = None
 
@@ -52,10 +58,13 @@ class SendStateHandler( AbstractHandler ):
             "message":"state",
             "data": {
                 "movement": self.AC3.movement.getState(),
-                "memory": self.AC3.reasoning.getMemory(),
-                "vision": self.AC3.vision.getVisibleObjects()
+                "memory": {},#self.AC3.reasoning.getMemory(),
+                "vision": {},#self.AC3.vision.getVisibleObjects()
+                "time":time.strftime("%Y-%m-%d %H:%M:%S") + '.' + str(time.time()).split('.')[1]
                 }
             }
+
+            logger.debug("Going to write back to : " + self.__class__.__name__ + " for WebSocket: " + self.websocketHandler.handlerToken + " for client: " + self.websocketHandler.uniqueClientToken )
             self.websocketHandler.write_message(message)
         except tornado.websocket.WebSocketClosedError as e:
             import traceback

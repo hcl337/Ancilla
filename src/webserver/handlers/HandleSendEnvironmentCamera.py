@@ -7,12 +7,14 @@ import base64
 logger = logging.getLogger(__name__)
 
 
-class SendEnvironmentCameraHandler( AbstractHandler ):
+class HandleSendEnvironmentCamera( AbstractHandler ):
     '''
     Sends the environment frame at the specified interval
     '''
 
-    camera_loop = None
+    def __init__(self, websocketHandler, AC3 ):
+        super(HandleSendEnvironmentCamera, self).__init__(websocketHandler, AC3)
+        self.camera_loop = None
 
     def canHandle( self, message ):
         return message['message'] == 'send_environment_camera'

@@ -3,7 +3,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class SetFocusCameraTrackingRegionOfInterestHandler( AbstractHandler ):
+class HandleSetFocusCameraTrackingRegionOfInterest( AbstractHandler ):
+
+
+    def __init__(self, websocketHandler, AC3 ):
+        super(HandleSetFocusCameraTrackingRegionOfInterest, self).__init__(websocketHandler, AC3)
 
     def canHandle( self, message ):
         return message['message'] == 'set_focus_camera_tracking_region_of_interest'

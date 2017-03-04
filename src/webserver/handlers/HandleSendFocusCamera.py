@@ -8,12 +8,14 @@ import base64
 logger = logging.getLogger(__name__)
 
 
-class SendFocusCameraHandler( AbstractHandler ):
+class HandleSendFocusCamera( AbstractHandler ):
     '''
     Sends the focus frame at the specified interval
     '''
 
-    camera_loop = None
+    def __init__(self, websocketHandler, AC3 ):
+        super(HandleSendFocusCamera, self).__init__(websocketHandler, AC3)
+        self.camera_loop = None
 
     def canHandle( self, message ):
         return message['message'] == 'send_focus_camera'

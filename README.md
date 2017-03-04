@@ -79,6 +79,14 @@ The system will use two cameras to enable both full environment awareness and ta
 * 1x - Raspberry Camera with 180 degree wide lens to track the entire range in front of the robot. It will be statically mounted on the front of the robot to give a fixed frame of reference for controlling gross movement. The image will be flattened and normalized to create a linear map of the environment from -90 degrees (left) to +90 degrees (right) and vertically from 0 degrees (flat) to 90 degrees (vertical).
 * 1x = Raspberry Camera with narrow lens mounted in the robot's eye which is actuated by the servos to create direct eye contact with objects and accurate tracking.
 
+## Key Tracking Actions
+* Background removal to identify salient areas around the robot
+* Movement calculation to identify more-salient elements 
+* Face detection to identify key elements to look at
+* Face recognition to allow specific faces to pop
+* Bright color object detection to allow tracking of colored objects
+
+
 ## Vision Code Libraries
 * [opencv k-means clustering](http://seiya-kumada.blogspot.com/2013/03/k-means-clustering.html)
 * [python implementation](https://gist.github.com/amueller/2956759) 

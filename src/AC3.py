@@ -18,6 +18,9 @@ from webserver.WebServer import AC3Server
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Clean up the screen a bit
+print("\n\n\n\n\n\n\n\n\n\n")
+
 class AC3:
     '''
     Main class for the robot which is the glue for all the different parts. It should
@@ -59,6 +62,7 @@ class AC3:
             #self.speech.say( "Speech Enabled" )
             #self.speech.say( "Booting AC-3 Operating system." )
             
+            '''
             logger.info("")
             logger.info("")
             logger.info("######################################## EXPRESSION")
@@ -78,20 +82,20 @@ class AC3:
             logger.info("######################################## HEARING")
             self.hearing = Hearing( self )
             self.hearing.enable( )
-            
+            '''
             logger.info("")
             logger.info("")
             logger.info("######################################## MOVEMENT")
             self.movement = Movement( self, "../parameters/servos.json" )
             self.movement.enable( )
             #self.speech.say( "Movement")
-    
+            '''
             
             logger.info("")
             logger.info("")
             logger.info("######################################## REASONING")
             self.reasoning = Reasoning( self )
-            
+            '''
             logger.info("")
             logger.info("")
             logger.info("######################################## WEB SERVER")
@@ -102,15 +106,17 @@ class AC3:
 
         # We want to wait if it is still talking before we say
         # everything is done.
-        while( self.speech.isTalking() ):
-            time.sleep(0.1)
+        if self.speech:
+            while( self.speech.isTalking() ):
+                time.sleep(0.1)
 
         endTime = time.time()
 
 
         # If we didn't crash, report that we are ready to go
         if self.isRunning( ):
-            self.speech.say( "Booted fully in " + str(round(endTime-startTime, 2 )) + " seconds.")
+            if self.speech:
+                self.speech.say( "Booted fully in " + str(round(endTime-startTime, 2 )) + " seconds.")
                 
             logger.info("Completed initializing AC3")
             logger.info("")
@@ -296,10 +302,10 @@ class AC3:
 ac3 = AC3( )
 
 
-if ac3.isRunning( ):
+#if ac3.isRunning( ):
     # new=0 means open in old tab if possible
     # autoraise=True means make it come to the forefront
-    webbrowser.open("http://localhost:8888", new=0, autoraise=True)
+    #webbrowser.open("http://localhost:8888", new=0, autoraise=True)
 
 
 ################################################################################
