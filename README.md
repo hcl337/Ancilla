@@ -28,7 +28,7 @@ The overall goal is to mimic simple human social interaction:
 
 0. Check out code base
 1. Install all dependencies [from setup script](SETUP.md).
-2. Run /src/alive.py to start the robot
+2. Run ```python src/AC3.py``` to start the robot
 3. In your browser, connect to the IP address to watch what is happening
 
 ------------------------------------------------------------------------------------------------------
@@ -56,6 +56,7 @@ One of the raspberry Pi's is for core processing and the other will be dedicated
 
 One of the biggest challenges in embedded systems is being able to understand and interact with them successfully. Therefore, I am going to expose the key elements in a password protected web interface.
 
+Here is the [API documentation](API.md).
 
 To change the password for the web server interface, run this below in the ```/src/webserver``` directory.
 ```
@@ -78,8 +79,19 @@ The system will use two cameras to enable both full environment awareness and ta
 * 1x - Raspberry Camera with 180 degree wide lens to track the entire range in front of the robot. It will be statically mounted on the front of the robot to give a fixed frame of reference for controlling gross movement. The image will be flattened and normalized to create a linear map of the environment from -90 degrees (left) to +90 degrees (right) and vertically from 0 degrees (flat) to 90 degrees (vertical).
 * 1x = Raspberry Camera with narrow lens mounted in the robot's eye which is actuated by the servos to create direct eye contact with objects and accurate tracking.
 
+## Key Tracking Actions
+* Background removal to identify salient areas around the robot
+* Movement calculation to identify more-salient elements 
+* Face detection to identify key elements to look at
+* Face recognition to allow specific faces to pop
+* Bright color object detection to allow tracking of colored objects
+
+
 ## Vision Code Libraries
-* [Raspberry Pi Tornado Websocket video server code](https://github.com/patrickfuller/camp/blob/master/server.py)
+* [opencv k-means clustering](http://seiya-kumada.blogspot.com/2013/03/k-means-clustering.html)
+* [python implementation](https://gist.github.com/amueller/2956759) 
+* [Python OpenCV k-means](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_ml/py_kmeans/py_kmeans_opencv/py_kmeans_opencv.html)
+* [meanshift and camshift](http://docs.opencv.org/3.2.0/db/df8/tutorial_py_meanshift.html) allows for easier tracking of known blobs such as objects and faces
 
 ## Raspberry Pi Vision Install
 '''
@@ -130,7 +142,10 @@ A few things I have seen online:
 ------------------------------------------------------------------------------------------------------
 # Speaking
 
-There are mupltiple
+There are multiple 
+
+### Parts
+* Small speaker
 
 ## TTS Tutorials and resources
 * [coding jarvis in python](https://ggulati.wordpress.com/2016/02/24/coding-jarvis-in-python-3-in-2016/)
@@ -141,6 +156,7 @@ There are mupltiple
 ------------------------------------------------------------------------------------------------------
 # Hearing
 
+### Parts
 There are two ways that speech recognition can be implemented. Either local(Sphinx) or cloud based (Amazon, Google). Cloud-based recognition will always be more accurate however there is a larger delay between speech and recognition. If local recognition is to be used, then a small vocabulary should be specified.
 
 ## Speech Recognition Libraries

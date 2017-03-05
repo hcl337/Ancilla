@@ -32,7 +32,7 @@ class Hearing( ):
         logger.info("Updating vocabulary files...")
 
         # Update our vocabulary with the latest version if possible
-        #updatesphinxvocabulary.updateVocabulary()
+        updatesphinxvocabulary.updateVocabulary()
 
         self.AC3 = AC3
 
@@ -147,15 +147,15 @@ class Hearing( ):
             if self.hearingProcess != None:
                 self.hearingProcess.stdout.read()
             
-            # Also see if we had any errors. This could be the reason we shut down so raise an exception
-            # if we saw one
-            error = self.hearingProcess.stderr.read( )
-            if len(error) != 0:
-                if 'Error opening audio device' in error:
-                    self.AC3.speech.say("Hearing disabled. No microphone found.")
-                    #raise Exception("Hearing process could not find a microphone")
-                else:
-                    raise Exception("Hearing process crashed. Reason specified is " + str(error) )
+                # Also see if we had any errors. This could be the reason we shut down so raise an exception
+                # if we saw one
+                error = self.hearingProcess.stderr.read( )
+                if len(error) != 0:
+                    if 'Error opening audio device' in error:
+                        self.AC3.speech.say("Hearing disabled. No microphone found.")
+                        #raise Exception("Hearing process could not find a microphone")
+                    else:
+                        raise Exception("Hearing process crashed. Reason specified is " + str(error) )
             
         except:
             self.AC3.reportFatalError()

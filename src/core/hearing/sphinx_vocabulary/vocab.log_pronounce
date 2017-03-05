@@ -4,6 +4,7 @@ LETTER-C - Morpheme: LETTER-C
 THREE - Morpheme: THREE 
 ANCILLA - By LtoS rules
 ANY - Main 
+ANYONE - Morpheme: ANYONE 
 ARE - Main 
 AROUND - Main 
 AT - Main 
@@ -56,6 +57,8 @@ ROBOT - Main
 ROSE - Main 
 SAY - Main 
 SCHEDULE - Main 
+SEE - Main 
+SEE - Morpheme: SEE 
 SHUT - Main 
 SISTER - Main 
 SLEEP - Main 

@@ -87,9 +87,35 @@ class FaceDetector( ):
         # Now turn them into JSON and rescale them to the full size
         faceList = []
         for (x, y, w, h) in facesFound:
-            faceList.append( {'x': int(x/SCALE), 'y': int(y/SCALE), 'width': int(w/SCALE), 'height': int(h/SCALE), 'orientation':'frontal'} )
+            newFace = {'x': int(x/SCALE), 'y': int(y/SCALE), 'width': int(w/SCALE), 'height': int(h/SCALE), 'orientation':'frontal'} 
+            if self.shouldAppend(faceList, newFace):
+                faceList.append( newFace )
+            else:
+                pass#logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
         for (x, y, w, h) in facesProfiles:
-            faceList.append( {'x': int(x/SCALE), 'y': int(y/SCALE), 'width': int(w/SCALE), 'height': int(h/SCALE), 'orientation':'profile'} )
+            newFace = {'x': int(x/SCALE), 'y': int(y/SCALE), 'width': int(w/SCALE), 'height': int(h/SCALE), 'orientation':'profile'} 
+            if self.shouldAppend(faceList, newFace):
+                faceList.append( newFace )
+            else:
+                pass#logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
 
         return faceList
+
+    # If they overlap by more than a bit, don't append them as they are the same face
+    def shouldAppend( self, faceList, newFace ):
+        for f in faceList:
+            intersect = self.intersection( f, newFace )
+            if intersect[2] > f['width']/3 or intersect[3] > f['height'] / 3:
+                return False
+        return True
+
+    def intersection(self, a,b):
+      x = max(a['x'], b['x'])
+      y = max(a['y'], b['y'])
+      w = min(a['x']+a['width'], b['x']+b['width']) - x
+      h = min(a['y']+a['height'], b['y']+b['height']) - y
+      if w<0 or h<0: return (0,0,0,0) # or (0,0,0,0) ?
+      return (x, y, w, h)
+
+
 

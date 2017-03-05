@@ -1,0 +1,172 @@
+
+<link rel="stylesheet" href="github-markdown.css">
+<style>
+    .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+    }
+</style>
+<article class="markdown-body">
+
+<h1>Websocket API</h1>
+<p>The websocket connection is how most communication with the system is accomplished. </p>
+<h2>Standard Format</h2>
+<p>It uses formatted JSON messages to identify which content is being sent or received. A JSON dictionary is sent with at least the "message" element with a value which is a string. The string is usually 5-20 characters long and human readable. It specifies fully what the rest of the content will be.</p>
+<pre><code>js
+{
+    "message": "MESSAGE_NAME", // Only necessary element
+    "attribute_1": "value",
+    "attribute_2": 2,
+    "attribute_3": {"a": 1, "b":2}
+}</code></pre>
+<h2>Quickstart guide</h2>
+<p>It is easy to connect and start using the system.</p>
+<ol>
+<li>POST to http://ip:8888/login?password=SECRET  </li>
+<li>OPEN http://ip:8888/websocket as a client side websocket  </li>
+<li>Send a json formatted "send_state" true message to enable state blob  </li>
+<li>Send a json formatted "send_environment_camera" true message to enable frames  </li>
+<li>Listen for "state" message and JSON data  </li>
+<li>Listen for "environment_camera_frame" message and data blob  </li>
+<li>Always lisen for "error" and "fatal_error" messages to find issues</li>
+</ol>
+<hr />
+<h1>Input Websocket Messages</h1>
+<p>Messages which can be sent to the system by the client</p>
+<h3>send_state</h3>
+<p>Toggles if the system sends out the large "state" blob of everything.   </p>
+<pre><code>js
+{
+    "message": "send_state",
+    "enable": false  // true or false to turn on and off sending state message
+    "mps": 10 // number of messages to send out each second from 1 to 30
+}</code></pre>
+<h3>send_environment_camera</h3>
+<p>Turns on or off sending frames of video from the wider environment camera at the base of the robot. It should usually be requested at a slow frame rate as the goal is to understand the overall environment just like our peripheral vision as humans, not target fast moving objects (Focus camera is for this).</p>
+<pre><code>js
+{
+    "message": "send_environment_camera",
+    "enable": true,  // true or false to turn on and off 
+    "fps": 5 // number of frames per second to send between 1 and 10
+}</code></pre>
+<h3>send_focus_camera</h3>
+<p>Turns on or off sending frames of video from the narrow focus camera on they "eye" of the robot. It is meant for defining regions to track.</p>
+<pre><code>js
+{
+    "message": "send_focus_camera",
+    "enable": true,  // true or false to turn on and off 
+    "fps": 5 // number of frames per second to send between 1 and 10
+}</code></pre>
+<h3>set_focus_camera_tracking_region_of_interest</h3>
+<p>Sets a region of image from a previous focus frame to use for tracking. This will enable the "focus_region_tracking" control type and will have the camera look at the best approximation of that region of interest. </p>
+<p>Because the aspect ratio and orientation of objects changes over time, the tracking region should be updated at a regular interval such as 2 hz to account for these changes.</p>
+<p>Types of elements to track:<br />
+<em> Faces
+</em> Objects</p>
+<pre><code>js
+{
+    "message": "set_focus_camera_tracking_region_of_interest",
+    "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
+    "data_type": "jpg",
+    "width": 100,
+    "height": 100
+}</code></pre>
+<h3>set_control_type</h3>
+<pre><code>js
+{
+    "message": "set_control_type",
+    "type": "position"  // "position", "focus_region_tracking"
+}</code></pre>
+<h3>set_servo_position</h3>
+<p>Sets the commanded position for a dimension </p>
+<pre><code>js
+{
+    "message": "set_servo_position",
+    "servo_name": "neck_rotate", // "neck_rotate", "neck_lean", "head_lean", "head_tilt", "eye_eyeris"
+    "angle": 50, // from min to max for this dimension
+    "speed": 10  // degrees per second
+}</code></pre>
+<h3>shutdown</h3>
+<p>Immediately shut down robot and stop all processes. This will also disconnect the websocket connection at the end. It should only be used for powering down the system when fully done.</p>
+<pre><code>js
+{
+    "message": "shutdown"
+}</code></pre>
+<hr />
+<h1>Output Websocket Messages</h1>
+<p>Messages which can come back from the robot when enabled.</p>
+<h3>state</h3>
+<p>A full "whiteboard" of the current state of all systems and their parameters.</p>
+<pre><code>js
+{
+    "message": "state",
+    "data": {
+        "movement":{
+            "servos": {
+                "head_rotate": }
+                    "requested_speed": 10,          // Current requested speed for last move
+                    "current_speed": 0,             // Current speed for current move
+                    "requested_angle": 30,          // Requested end angle
+                    "current_angle": 30,            // Current angle
+                    "resting_angle": 0,             // Position to go to when at rest
+                    "hardware_zero_offset": -90,    // READ ONLY: All servos are 0 to 180 degreees. Translate by this to center things
+                    "precision_threshold_angle": 3, // READ ONLY: Number of degrees where we are "close" and should start decelerating
+                    "servo_index": 1,               // READ ONLY: Hardware index of servo
+                    "max_speed": 20,                // READ ONLY: Max speed allowed
+                    "min_angle": -50,               // READ ONLY: Minimum angle before it stops
+                    "max_angle": 50                 // READ ONLY: Maximum angle after hardware_zero_offset to move before it stops
+                },  
+                "head_lean": { ... },
+                "neck_lean": { ... },
+                "head_tilt": { ... },
+                "eye_rotate": { ... },
+                "eye_eyeris": { ... }
+            }
+        }
+    }
+    }
+}</code></pre>
+<h3>environment_camera_frame</h3>
+<p>The data which describes the frame of video for the camera including base64 encoded data of the image, image type, size, etc.</p>
+<pre><code>js
+{
+    "message": "environment_camera_frame",
+    "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
+    "data_type": "jpg",
+    "width": 640,
+    "height": 480
+}</code></pre>
+<h3>focus_camera_frame</h3>
+<p>The data which describes the frame of video for the camera including base64 encoded data of the image, image type, size, etc.</p>
+<pre><code>js
+{
+    "message": "focus_camera_frame",
+    "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
+    "data_type": "jpg",
+    "width": 640,
+    "height": 480
+}</code></pre>
+<h3>error</h3>
+<p>Errors can be either in response to a message sent to the system or from an internal system issue. They are considered informational and will change the workings of the system but are not fatal and will not shut it down.</p>
+<pre><code>js
+{
+    "message": "error",
+    "type": "exception",
+    "description": "Description text goes here",
+    "stack trace": "..." // optional multi-line stack trace of where the error happened
+}</code></pre>
+<h3>fatal_error</h3>
+<p>If a fatal error message is received, the system will immediately shut down so this should be used to log the error on the browser but no further commands should be sent and the system should assume </p>
+<p>```js
+{
+    "message": "error",
+    "description": "Description text goes here",
+    "stack trace": "..." // optional multi-line stack trace of where the error happened</p>
+<p>}
+```</p>
+<h3>shutdown</h3>
+
+</article>")

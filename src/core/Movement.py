@@ -89,11 +89,15 @@ class Movement:
             # it ourselves.
             if adafruitServoController == None:
                 self.adafruitServoController = Adafruit_PCA9685.PCA9685()
+
             else:
                 self.adafruitServoController = adafruitServoController
 
+            # Set it to the right frequency
+            self.adafruitServoController.set_pwm_freq( PWM_FREQUENCY )
 
-            logger.info("\tInstantiation complete: Adafruit PCA9685 16 Servo Board")
+
+            logger.info("\tInstantiation complete: Adafruit PCA9685 16 PWM Servo Board")
         # This allows us to run on Mac for testing
 
         else:
