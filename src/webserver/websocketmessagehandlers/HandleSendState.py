@@ -19,7 +19,7 @@ class HandleSendState( AbstractHandler ):
 
 
     def canHandle( self, message ):
-        return message['message'] == 'send_state'
+        return message['type'].upper() == 'SEND_STATE'
 
 
     def handle( self, message ):
@@ -55,7 +55,7 @@ class HandleSendState( AbstractHandler ):
     def __stateLoop(self):
         try:
             message = {
-            "message":"state",
+            "type":"STATE",
             "data": {
                 "movement": self.AC3.movement.getState(),
                 "memory": {},#self.AC3.reasoning.getMemory(),

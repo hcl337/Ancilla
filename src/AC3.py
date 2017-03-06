@@ -4,6 +4,12 @@ import sys
 import traceback
 import inflection
 
+# Set the minimum level we log. DEBUG will show everything.
+# INFO will show a lot less.
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
 # Our imports
 from core.Movement import Movement
 from core.Vision import Vision
@@ -13,10 +19,6 @@ from core.Hearing import Hearing
 from core.Reasoning import Reasoning
 from webserver.WebServer import AC3Server
 
-# Set the minimum level we log. DEBUG will show everything.
-# INFO will show a lot less.
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 # Clean up the screen a bit
 print("\n\n\n\n\n\n\n\n\n\n")
@@ -147,6 +149,7 @@ class AC3:
         Logs and reports the exception which was thrown
         '''
 
+        print("LOGGER HERE!!!! >>>>\n\n\n\n\n")
         if self.reportedFatalException:
             logger.error("Got another fatal exception but disregarding...")
             return
@@ -188,12 +191,12 @@ class AC3:
             logger.error( "" )
             logger.error( "" )
 
-            errorString = "Fatal Exception experienced in " + str(moduleName) + " module: Reason Specified is " + str(ex)
+            errorString = "WOW! Fatal Exception experienced in " + str(moduleName) + " module: Reason Specified is " + str(ex)
+            print(errorString)
             if self.speech.isEnabled( ):
                 self.speech.say(errorString)
                 # Give it some time to say it before we trigger shutdown
                 time.sleep(3)
-
 
         except Exception as e:
             logger.error( "Error reporting fatal error: " + str(ex_type) + " " + str(ex))

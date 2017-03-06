@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 class HandleShutdown( AbstractHandler ):
 
     def canHandle( self, message ):
-        return 'shutdown' == message['message']
+        return 'SHUTDOWN' == message['type'].upper()
 
 
     def handle( self, message):

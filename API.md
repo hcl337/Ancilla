@@ -225,7 +225,7 @@ Types of elements to track:
 {
     "message": "set_focus_camera_tracking_region_of_interest",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
-    "data_type": "jpg",
+    "data_type": "image/jpg",
     "width": 100,
     "height": 100
 }
@@ -328,7 +328,7 @@ Because the camera has a fish-eye lense, the image is pre-normalized and scaled 
 {
     "message": "environment_camera_frame",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
-    "data_type": "jpg",
+    "data_type": "image/jpg",
     "width": 640,
     "height": 480
 }
@@ -349,7 +349,7 @@ The data which describes the frame of video for the camera including base64 enco
 {
     "message": "focus_camera_frame",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
-    "data_type": "jpg",
+    "data_type": "image/jpg",
     "width": 640,
     "height": 480
 }

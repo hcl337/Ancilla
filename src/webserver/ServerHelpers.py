@@ -13,6 +13,7 @@ SERVER_FILE_ROOT = os.path.normpath(os.path.dirname(__file__) + "/static")
 DOC_PATH = os.path.join(SERVER_FILE_ROOT, "../../../")
 README_DOC_PATH = os.path.join(SERVER_FILE_ROOT, "../../../README.md")
 SERVER_PORT = 8888
+ENCRYPTED_PASSWORD = None
 ################################################################################
 
 
@@ -45,6 +46,7 @@ def loadEncryptedPassword( ):
 
     return PASSWORD
 
+ENCRYPTED_PASSWORD = loadEncryptedPassword()
 
 
 def setServerCookie( self ):
