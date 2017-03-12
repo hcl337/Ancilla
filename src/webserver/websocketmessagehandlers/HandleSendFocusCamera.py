@@ -20,7 +20,6 @@ class HandleSendFocusCamera( AbstractHandler ):
     def canHandle( self, message ):
         return message['type'].upper() == 'SEND_FOCUS_CAMERA'
 
-
     def handle( self, message ):
 
         if not ('fps' in message and 'enable' in message):
@@ -72,8 +71,10 @@ class HandleSendFocusCamera( AbstractHandler ):
                 "type": "FOCUS_CAMERA_FRAME",
                 "image_data": b64,
                 "data_type":"image/jpg",
-                "width":im.shape.width,
-                "height":im.shape.height
+                "width":im.shape[1],
+                "height":im.shape[0],
+                "fov": self.AC3.vision.getFrameCameraFOV()
+
             }
 
             self.websocketHandler.write_message( message )

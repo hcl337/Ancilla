@@ -115,6 +115,12 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
 
 
 
+    def stopHandlingMessages( self ):
+        for handler in self.messageHandlers:
+            handler.stopHandling( )
+
+
+
     def __registerMessageHandler( self, handler ):
 
         self.messageHandlers.append( handler )
@@ -136,9 +142,7 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
         else:
             logger.error("Someone must have already deleted this user as the websocket connection is not a specified client: " + self.uniqueClientToken)
 
-        for handler in self.messageHandlers:
-            handler.stopHandling( )
-
+        self.stopHandlingMessages( )
 
 
     def on_message(self, message):

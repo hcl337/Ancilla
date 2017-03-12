@@ -56,7 +56,7 @@ class AC3Server( ):
         self.__tryToShutDownOldServer( )
 
         # Link up all the handlers 
-        handlers = [
+        self.handlers = [
             (r"/", IndexHandler.IndexHandler), \
             (r"/site", SiteHandler.SiteHandler),\
             (r"/login", LoginHandler.LoginHandler),\
@@ -66,7 +66,7 @@ class AC3Server( ):
             (r"/docs/([^/]+)$", DocsHandler.DocsHandler), \
             (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': SERVER_FILE_ROOT})]
 
-        self.application = tornado.web.Application(handlers, cookie_secret=ENCRYPTED_PASSWORD)
+        self.application = tornado.web.Application(self.handlers, cookie_secret=ENCRYPTED_PASSWORD)
 
         logger.info("Web Server creation complete...")
 
@@ -124,10 +124,16 @@ class AC3Server( ):
 
     def disable( self ):
 
-        message = { "type": "shutdown", "reason": "server disabled"}
+        logger.debug("Disabling Web Server. " + str(len(RobotWebSocket.clients)) + " clients connected.")
 
-        for client in RobotWebSocket.clients:
-            try: RobotWebSocket.client.write_message( message )
+
+        for clientName in RobotWebSocket.clients:
+            client = RobotWebSocket.clients[clientName]
+            logger.debug("Shutting down handlers for: " + client.uniqueClientToken)
+            client.stopHandlingMessages()
+            try: 
+                message = { "type": "SHUTDOWN", "reason": "server disabled"}
+                RobotWebSocket.client.write_message( message )
             except: pass
 
         tornado.ioloop.IOLoop.instance().stop()

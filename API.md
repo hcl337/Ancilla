@@ -155,7 +155,7 @@ The server uses formatted JSON messages to identify which content is being sent 
 
 ```js
 {
-    "message": "KNOWN_MESSAGE_NAME", // Only necessary element
+    "type": "{KNOWN_MESSAGE_NAME}", // Only necessary element
     "attribute_1": "value",
     "attribute_2": 2,
     "attribute_3": {"a": 1, "b":2}
@@ -167,20 +167,20 @@ The server uses formatted JSON messages to identify which content is being sent 
 
 Messages which can be sent to the system by the client are defined below.
 
-## send_state
+## SEND_STATE
 
 Toggles if the system sends out the large "state" blob of everything and defined a given number of messages per second to send. As the robot only updates itself at a maximum of 50 hz and there is real-world lag, usually 10hz or less makes sense for real data.
 
 #### Example Message
 ```js
 {
-    "message": "send_state",
+    "type": "SEND_STATE",
     "enable": true  // true or false to turn on and off sending state message
     "mps": 10 // number of messages to send out each second from 1 to 30
 }
 ```
 
-## send_environment_camera
+## SEND_ENVIRONMENT_CAMERA
 
 Turns on or off sending frames of video from the wider environment camera at the base of the robot. It should usually be requested at a slow frame rate as the goal is to understand the overall environment just like our peripheral vision as humans, not target fast moving objects (Focus camera is for this).
 
@@ -189,13 +189,13 @@ Because the robot has to transcode and send out each frame, 5-10 hz maximum is r
 #### Example Message
 ```js
 {
-    "message": "send_environment_camera",
+    "type": "SEND_ENVIRONMENT_CAMERA",
     "enable": true,  // true or false to turn on and off 
     "fps": 5 // number of frames per second to send between 1 and 10
 }
 ```
 
-## send_focus_camera
+## SEND_FOCUS_CAMERA
 
 Turns on or off sending frames of video from the narrow focus camera on they "eye" of the robot. It is meant for defining regions to track.
 
@@ -204,12 +204,12 @@ Because the robot has to transcode and send out each frame, 5-15 hz maximum is r
 #### Example Message
 ```js
 {
-    "message": "send_focus_camera",
+    "type": "SEND_FOCUS_CAMERA",
     "enable": true,  // true or false to turn on and off 
     "fps": 5 // number of frames per second to send between 1 and 10
 }
 ```
-## set_focus_camera_tracking_region_of_interest
+## SET_FOCUS_CAMERA_TRACKING_REGION_OF_INTEREST
 
 Sets a region of image from a previous focus frame to use for tracking. This will enable the "focus_region_tracking" control type and will have the camera look at the best approximation of that region of interest. 
 
@@ -223,7 +223,7 @@ Types of elements to track:
 #### Example Message
 ```js
 {
-    "message": "set_focus_camera_tracking_region_of_interest",
+    "type": "SET_FOCUS_CAMERA_TRACKING_REGION_OF_INTEREST",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
     "data_type": "image/jpg",
     "width": 100,
@@ -231,38 +231,38 @@ Types of elements to track:
 }
 ```
 
-## set_control_type
+## SET_CONTROL_TYPE
 Not yet implemented.
 #### Example Message
 ```js
 {
-    "message": "set_control_type",
-    "type": "position"  // "position", "focus_region_tracking"
+    "type": "SET_CONTROL_TYPE",
+    "way": "position"  // "position", "focus_region_tracking"
 }
 ```
 
-## set_servo_position
+## SET_SERVO_POSITION
 
 Sets the commanded position for a dimension 
 
 #### Example Message
 ```js
 {
-    "message": "set_servo_position",
+    "type": "SET_SERVO_POSITION",
     "servo_name": "neck_rotate", // "neck_rotate", "neck_lean", "head_lean", "head_tilt", "eye_eyeris"
     "angle": 50, // from min to max for this dimension
     "speed": 10  // degrees per second
 }
 ```
 
-## shutdown
+## SHUTDOWN
 
 Immediately shut down robot and stop all processes. This will also disconnect the websocket connection at the end. It should only be used for powering down the system when fully done.
 
 #### Example Message
 ```js
 {
-    "message": "shutdown"
+    "type": "SHUTDOWN"
 }
 ```
 
@@ -271,7 +271,7 @@ Immediately shut down robot and stop all processes. This will also disconnect th
 
 These are the messages which can come back from the robot when enabled by an input message.
 
-## state
+## STATE
 
 A full "whiteboard" of the current state of all systems and their parameters. This is the core message which defines the current state of all dimensions of the robot plus the constants for each dimension to help the user interpret the data dynamically. It is a fully described format.
 
@@ -286,7 +286,7 @@ A few key elements:
 #### Example Message
 ```js
 {
-    "message": "state",
+    "type": "STATE",
     "data": {
         "movement":{
             "servos": {
@@ -315,7 +315,7 @@ A few key elements:
 }
 ```
 
-## environment_camera_frame
+## ENVIRONMENT_CAMERA_FRAME
 
 The environment camera is a normalized ~180 degree camera used for periperal awareness of objects and to guide the overall movement of the robot. It is a fixed camera which is centered vertically and horizontally. Usually it updates at ~5 hz as it is meant to be a background set of data and is not for fast tracking.
 
@@ -326,17 +326,20 @@ Because the camera has a fish-eye lense, the image is pre-normalized and scaled 
 #### Example Message
 ```js
 {
-    "message": "environment_camera_frame",
+    "type": "ENVIRONMENT_CAMERA_FRAME",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
     "data_type": "image/jpg",
     "width": 640,
-    "height": 480
+    "height": 480,
+    "fov": {
+        "x": 160,
+        "y": 80
 }
 ```
 
 #### Usage
 
-To use this image data in HTML, you can prepend 'data:image/jpeg;base64' to the 'image_data' and pass it in as the 'src' variable for an image element on the page or load it as a data blob into a canvas. 
+To use this image data in HTML, you can prepend 'data:image/jpeg;base64,' to the 'image_data' and pass it in as the 'src' variable for an image element on the page or load it as a data blob into a canvas. 
 
 ## focus_camera_frame
 
@@ -347,55 +350,59 @@ The data which describes the frame of video for the camera including base64 enco
 #### Example Message
 ```js
 {
-    "message": "focus_camera_frame",
+    "type": "FOCUS_CAMERA_FRAME",
     "image_data": "4a4ag243ADAHFDSH...",  //base64 encoded image data
     "data_type": "image/jpg",
     "width": 640,
-    "height": 480
+    "height": 480,
+    "fov": {
+        "x": 50,
+        "y": 30
+    }
 }
 ```
 
 #### Usage
 
-To use this image data in HTML, you can prepend 'data:image/jpeg;base64' to the 'image_data' and pass it in as the 'src' variable for an image element on the page or load it as a data blob into a canvas.
+To use this image data in HTML, you can prepend 'data:image/jpeg;base64,' to the 'image_data' and pass it in as the 'src' variable for an image element on the page or load it as a data blob into a canvas.
 
-## error
+## ERROR
 
 Errors can be either in response to a message sent to the system or from an internal system issue. They are considered informational and will change the workings of the system but are not fatal and will not shut it down.
 
 #### Example Message
 ```js
 {
-    "message": "error",
-    "type": "error",
+    "type": "ERROR",
+    "exception": "error",
     "description": "Description text goes here",
     "stack trace": "..." // optional multi-line stack trace of where the error happened
 }
 ```
 
-## fatal_error
+## FATAL_ERROR
 
 If a fatal error message is received, the system will immediately shut down so this should be used to log the error on the browser but no further commands should be sent and the system should assume 
 
 #### Example Message
 ```js
 {
-    "message": "error",
-    "type": "fatal",
+    "type": "ERROR",
+    "exception": "fatal",
     "description": "Description text goes here",
     "stack trace": "..." // optional multi-line stack trace of where the error happened
 }
 ```
 
 
-## shutdown
+## SHUTDOWN
 
 If the system is shut down either from a user of this API or from the hardware side of the system, it will endevour to send out a 'shutdown' message, however this is not guaranteed if there is a major issue. It can also have an optional 'reason' why the shut down happened.
 
 #### Example Message
 ```js
 {
-    "message": "shutdown"
+    "type": "SHUTDOWN"
     "reason": "" //Optional reason why the system was shut down
 }
 ```

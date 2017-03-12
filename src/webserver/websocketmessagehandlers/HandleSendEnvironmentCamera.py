@@ -59,10 +59,11 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
 
     def __loop( self ):
 
+        #logger.debug("Sending env frame")
         try:
             im = self.AC3.vision.getLatestEnvironmentFrame( )
 
-            if im == None:
+            if im is None:
                 return
 
             cnt = cv.imencode('.jpg',im)[1]
@@ -72,8 +73,9 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
                 "type": "ENVIRONMENT_CAMERA_FRAME",
                 "image_data": b64,
                 "data_type":"image/jpg",
-                "width":im.shape.width,
-                "height":im.shape.height
+                "width":im.shape[1],
+                "height":im.shape[0],
+                "fov": self.AC3.vision.getEnvironmentCameraFOV()
             }
 
             self.websocketHandler.write_message( message )

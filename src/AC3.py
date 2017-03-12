@@ -3,12 +3,17 @@ import inspect
 import sys
 import traceback
 import inflection
+import cProfile
+import atexit
+import pstats
+import io
 
 # Set the minimum level we log. DEBUG will show everything.
 # INFO will show a lot less.
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+import yappi
 
 # Our imports
 from core.Movement import Movement
@@ -52,6 +57,10 @@ class AC3:
         logger.info("################################################################################")
         logger.info("")
 
+
+        yappi.start()
+        atexit.register(self.triggerOnExit)  
+
         try:
             startTime = time.time( )
     
@@ -64,7 +73,7 @@ class AC3:
             #self.speech.say( "Speech Enabled" )
             #self.speech.say( "Booting AC-3 Operating system." )
             
-            '''
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## EXPRESSION")
@@ -84,20 +93,20 @@ class AC3:
             logger.info("######################################## HEARING")
             self.hearing = Hearing( self )
             self.hearing.enable( )
-            '''
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## MOVEMENT")
             self.movement = Movement( self, "../parameters/servos.json" )
             self.movement.enable( )
             #self.speech.say( "Movement")
-            '''
+            
             
             logger.info("")
             logger.info("")
             logger.info("######################################## REASONING")
             self.reasoning = Reasoning( self )
-            '''
+            
             logger.info("")
             logger.info("")
             logger.info("######################################## WEB SERVER")
@@ -133,9 +142,23 @@ class AC3:
             logger.info("")
             logger.info("")
 
+        # Reset the timing profiler now that we are started up so we can get just stats
+        # from the running time
+        yappi.clear_stats()
+        yappi.start()
+
 
     # This makes sure we don't try to shut down multiple times
     __isRunningNow = True
+
+
+    def triggerOnExit( self ):
+
+        if self.isRunning():
+            self.shutdown()
+
+
+
 
     def isRunning( self ):
         return self.__isRunningNow
@@ -149,7 +172,6 @@ class AC3:
         Logs and reports the exception which was thrown
         '''
 
-        print("LOGGER HERE!!!! >>>>\n\n\n\n\n")
         if self.reportedFatalException:
             logger.error("Got another fatal exception but disregarding...")
             return
@@ -217,6 +239,9 @@ class AC3:
         if not self.__isRunningNow:
             return
 
+        self.__isRunningNow = False
+
+
         startTime = time.time()
 
         logger.info( "" )
@@ -227,6 +252,20 @@ class AC3:
         logger.info( "" )
         logger.info( "################################################################################")
         logger.info( "" )
+
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling server")
+        try:
+            if self.server is not None:
+                self.server.disable()
+        except Exception as e:
+            ex_type, ex, tb = sys.exc_info()
+            logger.error("Exception disabling server: " + str(ex) + " \n" + traceback.format_exc(tb))
+
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling reasoning")
         try:
             if self.reasoning is not None:
                 self.reasoning.disable( )
@@ -234,6 +273,9 @@ class AC3:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling reasoning: " + str(ex) + " \n" + traceback.format_exc(tb))
 
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling movement")
         try:
             if self.movement is not None:
                 self.movement.disable( )
@@ -241,6 +283,9 @@ class AC3:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling movement: " + str(ex) + " \n" + traceback.format_exc(tb))
 
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling server")
         try:
             if self.expression is not None:
                 self.expression.disable( )
@@ -248,6 +293,9 @@ class AC3:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling expression: " + str(ex) + " \n" + traceback.format_exc(tb))
 
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling vision")
         try:
             if self.vision is not None:
                 self.vision.disable( )
@@ -255,19 +303,15 @@ class AC3:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling vision: " + str(ex) + " \n" + traceback.format_exc(tb))
 
+        logger.info( "")
+        logger.info( "####################################")
+        logger.info( "Disabling hearing")
         try:
             if self.hearing is not None:
                 self.hearing.disable( )
         except Exception as e:
             ex_type, ex, tb = sys.exc_info()
             logger.error("Exception disabling hearing: " + str(ex) + " \n" + traceback.format_exc(tb))
-
-        try:
-            if self.server is not None:
-                self.server.disable( )
-        except Exception as e:
-            ex_type, ex, tb = sys.exc_info()
-            logger.error("Exception disabling server: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         endTime = time.time()
 
@@ -288,7 +332,7 @@ class AC3:
             logger.error("Exception disabling speech: " + str(ex) + " \n" + traceback.format_exc(tb))
 
         
-        time.sleep( 1 )
+        time.sleep( 0.1 )
         logger.info( "" )
         logger.info( "################################################################################")
         logger.info( "################################################################################")
@@ -299,7 +343,21 @@ class AC3:
         logger.info( "################################################################################")
         logger.info( "" )
 
-        self.__isRunningNow = False
+        logger.info( "################################################################################")
+        logger.info( "Process and thread stats" )
+        logger.info( "################################################################################")
+
+        yappi.stop()
+
+        yappi.convert2pstats(yappi.get_func_stats()).sort_stats('cumulative').print_stats(20)
+
+        # Display all thread and process timing stats stats
+        # yappi.get_func_stats().print_all()
+
+
+        logger.info( "################################################################################")
+        logger.info( "################################################################################")
+
 
 
 ac3 = AC3( )

@@ -16,6 +16,7 @@ import json
 #from tornado.websocket import WebSocketClosedError
 import time
 import BaseHandler
+from .. import RobotWebSocket
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +34,11 @@ class LogoutHandler(BaseHandler.BaseHandler):
 
         # Close all websocket connections with this token
         numClosed = 0
-        for client in clients:
+        for client in RobotWebSocket.clients:
             if token in client:
                 logger.info("Closed websocket connection: " + client)
                 try:
-                    clients[client].close()
+                    RobotWebSocket.clients[client].close()
                 except Exception as e: 
                     logger.info("Failed to close web socket client: " + str(e))
                 numClosed += 1

@@ -7,7 +7,7 @@ import httplib
 #import hashlib
 import json
 #import misaka
-#import gfm
+import gfm
 #from threading import Thread
 #import tornado.web
 #import tornado.websocket
@@ -17,7 +17,7 @@ import json
 import time
 import BaseHandler
 
-
+from .. import ServerHelpers
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +30,7 @@ class DocsHandler(BaseHandler.BaseHandler):
 
     def loadFile( self, fileName ):
         with open( fileName ) as f:
-            with open( os.path.join(SERVER_FILE_ROOT,'style/markdown-outer.html') ) as outer:
+            with open( os.path.join(ServerHelpers.SERVER_FILE_ROOT,'style/markdown-outer.html') ) as outer:
                 words =  gfm.markdown( f.read() )
 
                 # We need to update the paths in the .md files when hosting
@@ -52,13 +52,16 @@ class DocsHandler(BaseHandler.BaseHandler):
 
 
     def get(self, fileName):
+
+        ServerHelpers.displayRequestDetails(self)
+
         if not( fileName in self.docs ):
             try:
 
                 if not (fileName.endswith(".md")):
                     fileName = fileName.upper() + ".md"
 
-                fileName = DOC_PATH + fileName
+                fileName = ServerHelpers.DOC_PATH + fileName
 
                 logger.debug("Doc file to look for: " + fileName)
                 self.loadFile( fileName )
