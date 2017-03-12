@@ -140,7 +140,20 @@ class Hearing( ):
 
                 # Send the event out to all of our listeners
                 for fn in self.callbacks:
-                    fn(phrase)
+                    #fn(phrase)
+
+                    # We don't want our callbacks to get stuck where
+                    # things can get backed up so need to call them
+                    # as a thread instead. It might be better to do it
+                    # as a thread pool, but not sure...
+
+                    logger.debug(">>>>> " + phrase)
+                    # Create our thread
+                    updateThread = Thread(target=fn,  args=[phrase])
+                    # Make sure it dies if the whole app dies
+                    updateThread.setDaemon(True)
+                    # Need to actually start it running where it calls the update function
+                    updateThread.start()
 
             # When the subprocess terminates there might be unconsumed output
             # that still needs to be processed.

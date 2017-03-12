@@ -45,6 +45,9 @@ class Vision( ):
 
     AC3 = None
 
+    # Update at a max of 5 hz for our data, not 30 hz
+    MIN_TIME_FOR_COMPUTING_VISION = 1 / 5
+
 
     def __init__ ( self, AC3 ):
         '''
@@ -56,6 +59,11 @@ class Vision( ):
         self.registerEnvironmentFrameListener( self.computeCoreEnvironment )
         self.AC3 = AC3
 
+        self.___environmentCameraFOV = {'x':70, 'y':50}
+        self.___focusCameraFOV = {'x':50, 'y':30}
+
+        self.timeOfLastVisualUpdate = time.time()
+        self.isComputingCoreEnvironment = False
 
 
     def enable( self ):
@@ -130,7 +138,7 @@ class Vision( ):
     def registerFocusFrameListener( self, listener ):
         '''
         Register a listener method who will be called each time
-        a new focus fram is received. It should then call 
+        a new focus frame is received. It should then call 
         AC3.vision.getLatestFocusFrame( ) to get the frame
 
         '''
@@ -151,7 +159,7 @@ class Vision( ):
     def registerEnvironmentFrameListener( self, listener ):
         '''
         Register a listener method who will be called each time
-        a new environment fram is received. It should then call 
+        a new environment frame is received. It should then call 
         AC3.vision.getLatestEnvironmentFrame( ) to get the frame
         
         '''
@@ -200,6 +208,23 @@ class Vision( ):
         return self.latestEnvironmentFrame
 
 
+    def getEnvironmentCameraFOV( self ):
+        '''
+        returns a dictionary of x and y field of view (angle width)
+        for the specific hardware
+        '''
+        return self.___environmentCameraFOV
+
+
+
+    def getFocusCameraFOV( self ):
+        '''
+        returns a dictionary of x and y field of view (angle width)
+        for the specific hardware
+        '''
+        return self.___focusCameraFOV
+
+
 
     def getVisibleObjects( self ):
         '''
@@ -216,12 +241,26 @@ class Vision( ):
         on each frame it is triggered on. It is a heavy duty method
 
         '''
+
+        if self.isComputingCoreEnvironment:
+            logger.debug("computingCoreEnvironment: still doing last so skipping")
+            return
+
+        # If we let it go too fast, we will run out of processor on the machine
+        if time.time() - self.timeOfLastVisualUpdate < Vision.MIN_TIME_FOR_COMPUTING_VISION:
+            logger.debug("computingCoreEnvironment: too fast so skipping")
+            return
+
+        self.isComputingCoreEnvironment = True
+        self.timeOfLastVisualUpdate = time.time()
+
         visualObjects = {}
 
         img = self.getLatestEnvironmentFrame()
 
-        if img == None or img.shape[0] == 0:
+        if img is None or img.shape[0] == 0:
             logger.debug("Skipping analysis. No image yet.")
+            return
 
         ##############################
         # FACE DETECTION
@@ -238,6 +277,10 @@ class Vision( ):
 
 
         self.visualObjects = visualObjects
+
+        self.isComputingCoreEnvironment = False
+
+        #logger.debug("computeCoreEnvironment: execution time: " + str(round(time.time() - self.timeOfLastVisualUpdate, 2) ) + ' sec.')
 
 
 
@@ -330,11 +373,21 @@ class Vision( ):
         '''
         if self.focusCamera != None:
             ret, fullFrame = self.focusCamera.read()
-            if (fullFrame != None) and (fullFrame.shape[0] > 0):
+            if (fullFrame is not None) and (fullFrame.shape[0] > 0):
                 self.latestFocusFrame = fullFrame.copy()
     
                 for fn in self.focusListeners:
-                    fn()
+                    # We don't want our callbacks to get stuck where
+                    # things can get backed up so need to call them
+                    # as a thread instead. It might be better to do it
+                    # as a thread pool, but not sure...
+
+                    # Create our thread
+                    updateThread = Thread(target=fn)
+                    # Make sure it dies if the whole app dies
+                    updateThread.setDaemon(True)
+                    # Need to actually start it running where it calls the update function
+                    updateThread.start()
 
 
 
@@ -346,11 +399,21 @@ class Vision( ):
 
         if self.environmentCamera != None:
             ret, fullFrame = self.environmentCamera.read()
-            if (fullFrame != None) and (fullFrame.shape[0] > 0):
+            if (fullFrame is not None) and (fullFrame.shape[0] > 0):
                 self.latestEnvironmentFrame = fullFrame.copy()
 
                 for fn in self.environmentListeners:
-                    fn()
+                    # We don't want our callbacks to get stuck where
+                    # things can get backed up so need to call them
+                    # as a thread instead. It might be better to do it
+                    # as a thread pool, but not sure...
+
+                    # Create our thread
+                    updateThread = Thread(target=fn)
+                    # Make sure it dies if the whole app dies
+                    updateThread.setDaemon(True)
+                    # Need to actually start it running where it calls the update function
+                    updateThread.start()
 
 
 '''

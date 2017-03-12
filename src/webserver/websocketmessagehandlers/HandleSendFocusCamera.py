@@ -4,26 +4,26 @@ from tornado.websocket import WebSocketClosedError
 import logging
 import cv2 as cv
 import base64
+
 logger = logging.getLogger(__name__)
 
 
-class HandleSendEnvironmentCamera( AbstractHandler ):
+class HandleSendFocusCamera( AbstractHandler ):
     '''
-    Sends the environment frame at the specified interval
+    Sends the focus frame at the specified interval
     '''
 
     def __init__(self, websocketHandler, AC3 ):
-        super(HandleSendEnvironmentCamera, self).__init__(websocketHandler, AC3)
+        super(HandleSendFocusCamera, self).__init__(websocketHandler, AC3)
         self.camera_loop = None
 
     def canHandle( self, message ):
-        return message['message'] == 'send_environment_camera'
-
+        return message['type'].upper() == 'SEND_FOCUS_CAMERA'
 
     def handle( self, message ):
 
         if not ('fps' in message and 'enable' in message):
-            raise Exception("send_environment_camera message must contain 'fps' and 'enable' variables. See documentation.")
+            raise Exception("send_focus_camera message must contain 'fps' and 'enable' variables. See documentation.")
 
         fps = message['fps']
         enable = message['enable']
@@ -36,7 +36,7 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
         self.stopHandling()
 
         if self.AC3.vision == None or not self.AC3.vision.isEnabled():
-            error_message = {"message":"error","type":"Exception","description":"Vision not enabled so can not return frames."}
+            error_message = {"type":"error","exception":"Exception","description":"Vision not enabled so can not return frames."}
             self.websocketHandler.write_message(error_message )
             return
 
@@ -44,10 +44,9 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
         if enable:
             self.camera_loop = PeriodicCallback(self.__loop, 1000 / fps )
             self.camera_loop.start()
-            logger.debug("Enabling broadcast environment camera")
+            logger.debug("Enabling broadcast focus camera")
         else:
-            logger.debug("Disabling broadcast environment camera")
-
+            logger.debug("Disabling broadcast focus camera")
 
 
     def stopHandling( self ):
@@ -60,17 +59,22 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
     def __loop( self ):
 
         try:
-            im = self.AC3.vision.getLatestEnvironmentFrame( )
+            im = self.AC3.vision.getLatestFocusFrame( )
 
-            if im == None:
+            if im is None:
                 return
 
             cnt = cv.imencode('.jpg',im)[1]
             b64 = base64.encodestring(cnt)        
 
             message = {
-                "message": "environment_camera_frame",
+                "type": "FOCUS_CAMERA_FRAME",
                 "image_data": b64,
+                "data_type":"image/jpg",
+                "width":im.shape[1],
+                "height":im.shape[0],
+                "fov": self.AC3.vision.getFrameCameraFOV()
+
             }
 
             self.websocketHandler.write_message( message )

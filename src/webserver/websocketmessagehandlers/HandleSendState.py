@@ -19,7 +19,7 @@ class HandleSendState( AbstractHandler ):
 
 
     def canHandle( self, message ):
-        return message['message'] == 'send_state'
+        return message['type'].upper() == 'SEND_STATE'
 
 
     def handle( self, message ):
@@ -55,16 +55,16 @@ class HandleSendState( AbstractHandler ):
     def __stateLoop(self):
         try:
             message = {
-            "message":"state",
+            "type":"STATE",
             "data": {
                 "movement": self.AC3.movement.getState(),
                 "memory": {},#self.AC3.reasoning.getMemory(),
-                "vision": {},#self.AC3.vision.getVisibleObjects()
+                "vision": self.AC3.vision.getVisibleObjects(),
                 "time":time.strftime("%Y-%m-%d %H:%M:%S") + '.' + str(time.time()).split('.')[1]
                 }
             }
 
-            logger.debug("Going to write back to : " + self.__class__.__name__ + " for WebSocket: " + self.websocketHandler.handlerToken + " for client: " + self.websocketHandler.uniqueClientToken )
+            #logger.debug("Going to write back to : " + self.__class__.__name__ + " for WebSocket: " + self.websocketHandler.handlerToken + " for client: " + self.websocketHandler.uniqueClientToken )
             self.websocketHandler.write_message(message)
         except tornado.websocket.WebSocketClosedError as e:
             import traceback

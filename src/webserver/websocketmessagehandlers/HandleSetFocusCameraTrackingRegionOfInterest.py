@@ -10,7 +10,7 @@ class HandleSetFocusCameraTrackingRegionOfInterest( AbstractHandler ):
         super(HandleSetFocusCameraTrackingRegionOfInterest, self).__init__(websocketHandler, AC3)
 
     def canHandle( self, message ):
-        return message['message'] == 'set_focus_camera_tracking_region_of_interest'
+        return message['type'].upper() == 'SET_FOCUS_CAMERA_TRACKING_REGION_OF_INTEREST'
 
 
     def handle( self, message ):

@@ -20,9 +20,8 @@ import cv2 as cv
 # import ServerHelpers which has abstracted out all of our detail stuff to support
 # the web server
 from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME, 
-    isLoggedIn, loadEncryptedPassword, getServerCookie, setServerCookie, clearServerCookie,
-    SERVER_PORT, SERVER_FILE_ROOT, DOC_PATH, README_DOC_PATH )
-from handlers import *
+    isLoggedIn, getServerCookie, SERVER_PORT, SERVER_FILE_ROOT, DOC_PATH, README_DOC_PATH )
+from websocketmessagehandlers import *
 
 logger = logging.getLogger(__name__)
 
@@ -42,21 +41,6 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
         self.messageHandlers = []
         self.uniqueClientToken = "-1"
         self.handlerToken = "S"+str(randint(100000,1000000)) + "S"
-
-        #self.initializeHandlers()
-        '''
-        try:
-            # Add all of our websocket message handlers here
-            self.__registerMessageHandler( HandleSendEnvironmentCamera.HandleSendEnvironmentCamera( self, AC3 ) )
-            self.__registerMessageHandler( HandleSendFocusCamera.HandleSendFocusCamera( self, AC3 ) )
-            self.__registerMessageHandler( HandleSendState.HandleSendState( self, AC3 ) )
-            self.__registerMessageHandler( HandleSetFocusCameraTrackingRegionOfInterest.HandleSetFocusCameraTrackingRegionOfInterest( self, AC3 ) )
-            self.__registerMessageHandler( HandleSetServoPosition.HandleSetServoPosition( self, AC3 ) )
-            self.__registerMessageHandler( HandleShutdown.HandleShutdown( self, AC3 ) )
-
-        except:
-            AC3.reportFatalError( )
-        '''
 
 
     def initializeHandlers( self ):
@@ -131,6 +115,12 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
 
 
 
+    def stopHandlingMessages( self ):
+        for handler in self.messageHandlers:
+            handler.stopHandling( )
+
+
+
     def __registerMessageHandler( self, handler ):
 
         self.messageHandlers.append( handler )
@@ -152,9 +142,7 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
         else:
             logger.error("Someone must have already deleted this user as the websocket connection is not a specified client: " + self.uniqueClientToken)
 
-        for handler in self.messageHandlers:
-            handler.stopHandling( )
-
+        self.stopHandlingMessages( )
 
 
     def on_message(self, message):
@@ -167,8 +155,8 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
                 self.write_message(json.dumps)
 
             # First make sure it has the message tag in it we use
-            if not 'message' in message:
-                returnMessage = {"message": "error", "type": "UnsupportedMessage", "description":"Message must have 'message' element with name of message."}
+            if not 'type' in message:
+                returnMessage = {"type": "error", "exception": "UnsupportedMessage", "description":"Message must have 'type' element with name of message."}
                 self.write_message( json.dumps(returnMessage))
                 return False
 
@@ -182,12 +170,12 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
 
             # Handle error if no supported message handler exists
             if not wasHandled:
-                returnMessage = {"message": "error", "type": "UnsupportedMessage", "description":"Unknown Message Type: " + message['message']}
+                returnMessage = {"type": "error", "exception": "UnsupportedMessage", "description":"Unknown Message Type: " + message['message']}
                 self.write_message( json.dumps(returnMessage))
 
         except ValueError as e:
             logger.error("Could not decode message: " + str(message))
-            returnMessage = {"message": "error", "type": "ValueError", "description":"Could not parse incoming message. Must be a JSON dictionary with at least {'message':'name'}"}
+            returnMessage = {"type": "error", "exception": "ValueError", "description":"Could not parse incoming message. Must be a JSON dictionary with at least {'message':'name'}"}
             self.write_message( json.dumps(returnMessage))
         except WebSocketClosedError:
             logger.error("Websocket connection disconnected")

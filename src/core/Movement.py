@@ -207,7 +207,7 @@ class Movement:
         Loop through all of our specified PWMs and update them with our position/speed data. This
         creates a thread which loops at our defined rate to update them
         '''
-        print("Update loop")
+        #print("Update loop")
         try:
             # Set the PWM update interval based on our parameters
             interval = 1.0 / self.servoState['params']['servo_position_update_rate_hz']
@@ -291,7 +291,7 @@ class Movement:
                 #print("\t\t Servo not moving: " )
                 continue
 
-            logger.info("Moving " + servoName + " from " + str(servo['current_angle']) + " to " + str(servo['requested_angle']) + " deg at " + str(servo['current_speed']) + " deg / sec "  )
+            #logger.info("Moving " + servoName + " from " + str(servo['current_angle']) + " to " + str(servo['requested_angle']) + " deg at " + str(servo['current_speed']) + " deg / sec "  )
 
 
             # At the end, we add in the zero-offset so we are in the correct range for the servo
@@ -347,7 +347,7 @@ class Movement:
         # Convert to ticks which equal the number of milliseconds we need
         pulseInTicks = int( round( msecPulse * Movement.TICKS_PER_MSEC) )
 
-        logger.debug( str( servo['servo_index'] ) + ": servo_angle = " + str( angle) + " servo_speed = " + str(servo['current_speed']) + " pwm_pulse: " + str(round(msecPulse, 3) ) + " pwm_ticks = " + str(pulseInTicks) + " / 4096" )
+        #logger.debug( str( servo['servo_index'] ) + ": servo_angle = " + str( angle) + " servo_speed = " + str(servo['current_speed']) + " pwm_pulse: " + str(round(msecPulse, 3) ) + " pwm_ticks = " + str(pulseInTicks) + " / 4096" )
 
         # Don't send out a command unless we are talking to a real raspberry pi
         if isRaspberryPi:

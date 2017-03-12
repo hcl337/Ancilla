@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 class HandleSetServoPosition( AbstractHandler ):
 
     def canHandle( self, message ):
-        return 'set_servo_position' == message['message']
+        return 'SET_SERVO_POSITION' == message['type'].upper()
 
 
     def handle( self, message ):
