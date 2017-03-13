@@ -7,7 +7,7 @@ import base64
 import hashlib
 import time
 import json
-import misaka
+#import misaka
 import gfm
 from threading import Thread
 import tornado.web
@@ -19,7 +19,7 @@ import cv2 as cv
 
 # import ServerHelpers which has abstracted out all of our detail stuff to support
 # the web server
-from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME, 
+from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME,
     isLoggedIn, getServerCookie, SERVER_PORT, SERVER_FILE_ROOT, DOC_PATH, README_DOC_PATH )
 from websocketmessagehandlers import *
 
@@ -96,7 +96,7 @@ class RobotWebSocket(tornado.websocket.WebSocketHandler):
         displayRequestDetails( self )
 
         # Get the cookie, extract our session token and add a unique
-        # element to it so we support multiple websocket logins, but 
+        # element to it so we support multiple websocket logins, but
         # can still track them back to the user.
         cookie = getServerCookie( self )
         token = cookie['token']

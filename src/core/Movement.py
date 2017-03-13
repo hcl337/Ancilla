@@ -149,9 +149,9 @@ class Movement:
         servos = self.servoState['servos']
         for servo in servos:
             servos[servo]['requested_angle'] = servos[servo]['resting_angle']
-            servos[servo]['requested_speed'] = 60
+            servos[servo]['requested_speed'] = servos[servo]['max_speed']
         
-        time.sleep(4)
+        time.sleep(1.5)
         
         self.isShuttingDown = False
         self.updateLoopActive = False
@@ -213,7 +213,7 @@ class Movement:
         else:
             servo['requested_speed'] = speed
 
-        logger.debug("Set servo:     " + name + " angle = " + str(servo['requested_angle']) + " speed = " + str(servo['requested_speed']))
+        #logger.debug("Set servo:     " + name + " angle = " + str(servo['requested_angle']) + " speed = " + str(servo['requested_speed']))
 
 
 
@@ -226,7 +226,7 @@ class Movement:
         try:
             # Set the PWM update interval based on our parameters
             interval = 1.0 / self.servoState['params']['servo_position_update_rate_hz']
-            logger.info("Setting servo angle Update Interval to " + str(round(1/interval)) + " hz.")
+            #logger.info("Setting servo angle Update Interval to " + str(round(1/interval)) + " hz.")
     
     
             # If we have stopped this loop then de-activate the servos before we do anything else

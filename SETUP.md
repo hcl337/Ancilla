@@ -65,6 +65,9 @@ sudo apt-get -y install python-opencv
 sudo pip install scipy
 sudo pip install numpy
 
+# On Raspberry pi to get OpenCV to recognize the PiCam
+sudo modprobe bcm2835-v4l2
+
 
 ################################################################################
 # SERVOS
