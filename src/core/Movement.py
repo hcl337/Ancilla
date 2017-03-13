@@ -94,7 +94,7 @@ class Movement:
                 self.adafruitServoController = adafruitServoController
 
             # Set it to the right frequency
-            self.adafruitServoController.set_pwm_freq( PWM_FREQUENCY )
+            self.adafruitServoController.set_pwm_freq( Movement.PWM_FREQUENCY )
 
 
             logger.info("\tInstantiation complete: Adafruit PCA9685 16 PWM Servo Board")
@@ -137,12 +137,23 @@ class Movement:
           self.setServoAngle(servo, self.servoState['servos'][servo]['resting_angle'], 10)
 
 
+    isShuttingDown = False
+    
     def disable( self ):
         '''
         Stops all servo updates by killing the update loop
 
         '''
-
+        
+        self.isShuttingDown = True
+        servos = self.servoState['servos']
+        for servo in servos:
+            servos[servo]['requested_angle'] = servos[servo]['resting_angle']
+            servos[servo]['requested_speed'] = 60
+        
+        time.sleep(4)
+        
+        self.isShuttingDown = False
         self.updateLoopActive = False
 
 
@@ -180,6 +191,10 @@ class Movement:
         if not (name in self.servoState['servos']):
             raise Exception("Servo does not exist so can not setServoAngle for " + str(name))
 
+        # Don't let us update if we are shutting down
+        if self.isShuttingDown:
+            return
+        
         servo = self.servoState['servos'][name]
 
         # Keep things in bounds for our requested position
