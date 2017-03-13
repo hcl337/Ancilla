@@ -33,6 +33,7 @@ It is easy to connect and start using the system. You should log in to the API u
 4. Listen for "state" message and JSON data
 5. Listen for "environment_camera_frame" message and data blob
 6. Always lisen for "error" messages to find issues
+
 ----------------------------------------------------------------------------------------------
 # Authentication API
 
