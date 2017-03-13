@@ -19,6 +19,32 @@ VOCABULARY_FILE = HEARING_FILE_ROOT + "/vocabulary.txt"
 DOWNLOADED_FILE = HEARING_FILE_ROOT + "/sphinx.tgz"
 EXTRACTED_DIRECTORY = HEARING_FILE_ROOT + "/sphinx_vocabulary/"
 
+def updateVocabulary( ):
+
+    try:
+        #Do the request to download the file
+        __downloadSphinxFile( VOCABULARY_FILE, DOWNLOADED_FILE )
+    except Exception as e:
+        logger.error("Tried to update Sphinx voice files but was not successful: " + str(e))
+        # Return because we hopefully already have old ones
+        return
+
+    # Delete our old ones and remake the directory
+    if os.path.exists(EXTRACTED_DIRECTORY):
+        shutil.rmtree( EXTRACTED_DIRECTORY )
+
+    os.makedirs(EXTRACTED_DIRECTORY)
+
+    # Extract it to the correct location 
+    __extract( DOWNLOADED_FILE, EXTRACTED_DIRECTORY )
+
+    # Remove the TAR to clean up
+    os.remove( DOWNLOADED_FILE )
+
+    __removeDateToCleanCommit( EXTRACTED_DIRECTORY + '/vocab.lm' )
+
+
+
 def __extract(tar_url, extract_path='.'):
     '''
     Simply extracts the TAR to the defined location
@@ -35,6 +61,7 @@ def __extract(tar_url, extract_path='.'):
 
         if item.name.find(".tgz") != -1 or item.name.find(".tar") != -1:
             extract(item.name, "./" + item.name[:item.name.rfind('/')])
+
 
 
 def __downloadSphinxFile( vocabularyFilePath, downloadFilePath ):
@@ -64,24 +91,28 @@ def __downloadSphinxFile( vocabularyFilePath, downloadFilePath ):
     with open( downloadFilePath, 'w' ) as f:
         f.write( zippedFile )
 
-def updateVocabulary( ):
 
-    try:
-        #Do the request to download the file
-        __downloadSphinxFile( VOCABULARY_FILE, DOWNLOADED_FILE )
-    except Exception as e:
-        logger.error("Tried to update Sphinx voice files but was not successful: " + str(e))
-        # Return because we hopefully already have old ones
-        return
 
-    # Delete our old ones and remake the directory
-    if os.path.exists(EXTRACTED_DIRECTORY):
-        shutil.rmtree( EXTRACTED_DIRECTORY )
+def __removeDateToCleanCommit( path ):
+    '''
+    Every time we request a new file, it changes the date so GIT thinks we need to
+    recommit it. This will remove that date code.
+    '''
+    with open( path, 'r') as f:
+        contents = f.read()
 
-    os.makedirs(EXTRACTED_DIRECTORY)
+    #logger.debug(contents)
 
-    # Extract it to the correct location 
-    __extract( DOWNLOADED_FILE, EXTRACTED_DIRECTORY )
+    with open( path, 'w') as f:
+        lines = contents.split('\n')
 
-    # Remove the TAR to clean up
-    os.remove( DOWNLOADED_FILE )
+        for line in lines:
+            #logger.debug(">> " + line)
+            # Get rid of the date element
+            if 'Language model created by' in line:
+                shorterLine = line.split('on')[0]
+                logger.debug("Found time line and removed: " + line + " " + shorterLine)
+                line = shorterLine
+            f.write( line + "\n" )
+
+
