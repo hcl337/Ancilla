@@ -59,15 +59,16 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
 
     def __loop( self ):
 
-        #logger.debug("Sending env frame")
+        logger.debug("Sending env frame")
         try:
             im = self.AC3.vision.getLatestEnvironmentFrame( )
 
             if im is None:
+                logger.debug("No env frame to send")
                 return
 
             cnt = cv.imencode('.jpg',im)[1]
-            b64 = base64.encodestring(cnt)        
+            b64 = base64.encodestring(cnt)
 
             message = {
                 "type": "ENVIRONMENT_CAMERA_FRAME",

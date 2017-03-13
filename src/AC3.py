@@ -59,7 +59,7 @@ class AC3:
 
 
         yappi.start()
-        atexit.register(self.triggerOnExit)  
+        atexit.register(self.triggerOnExit)
 
         try:
             startTime = time.time( )
