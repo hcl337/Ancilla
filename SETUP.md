@@ -54,10 +54,12 @@ sudo apt-get -y install build-essential git cmake pkg-config
 sudo apt-get -y install libjpeg-dev libtiff-dev libjasper-dev libpng-dev
 
 # Video Libs
-sudo apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev
 
 # UI Libs
 sudo apt-get -y install libgtk2.0-dev
+
+# Libs to Optimize OpenCV functions
 sudo apt-get -y install libatlas-base-dev gfortran
 
 # Pi Camera Interface
@@ -66,11 +68,52 @@ sudo pip install picamera
 # Python image manipulation
 sudo pip install Pillow
 
-# OpenCV, NumPy, SciPi
-sudo apt-get -y install python-opencv
+# Other
+sudo apt-get install default-jdk ant
+sudo apt-get install libgtkglext1-dev
+sudo apt-get install v4l-utils
+
+# NumPy, SciPi
+# Needed to use OpenCV 3+ and package is only for 2.4 so had to build from stractch
+# sudo apt-get -y install python-opencv
 sudo pip install scipy
 sudo pip install numpy
 
+# INSTALL OPENCV 3.2
+# This takes 3+ hours. Be patient.
+# https://github.com/Tes3awy/OpenCV-3.2.0-Compiling-on-Raspberry-Pi
+#cd ~
+#wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.2.0.zip
+#wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.2.0.zip
+#unzip opencv.zip
+#unzip opencv_contrib.zip
+#
+#cd opencv-3.2.0
+#mkdir build
+#cd build
+#
+#cmake -D CMAKE_BUILD_TYPE=RELEASE \
+#	-D CMAKE_INSTALL_PREFIX=/usr/local \
+#	-D INSTALL_C_EXAMPLES=OFF \
+#	-D INSTALL_PYTHON_EXAMPLES=ON \
+#	-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.2.0/modules \
+#	-D BUILD_EXAMPLES=ON \
+#	-D ENABLE_NEON=ON ..
+
+# Make it using multiple cores to speed up
+#sudo make -j3
+#sudo make install
+#sudo ldconfig
+
+#echo $'/usr/local/lib\n' > /etc/ld.so.conf.d/opencv.conf
+#echo $'PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig\nexport #PKG_CONFIG_PATH\n' >> /etc/bash.baschrc
+
+# https://github.com/jabelone/OpenCV-for-Pi
+wget "https://github.com/jabelone/OpenCV-for-Pi/raw/master/latest-OpenCV.deb"
+sudo dpkg -i latest-OpenCV.deb
+
+# Now restart
+sudo shutdown -r now
 # On Raspberry pi to get OpenCV to recognize the PiCam
 sudo modprobe bcm2835-v4l2
 
