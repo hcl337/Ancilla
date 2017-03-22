@@ -14,6 +14,7 @@ set -ex
 # CORE
 ################################################################################
 
+# Standard updates to a linux system and install python stuff
 sudo apt-get update
 sudo apt-get upgrade
 sudo rpi-update
@@ -29,13 +30,13 @@ echo " export PATH=/usr/local/bin:\$PATH"
 echo ""
 read -n1 -r -p "Then press spacebar to continue..."
 
+# Core util stuff to add
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
+
 # Help docs in markdown for the API
 sudo pip install gfm
-
-sudo pip install psutil
 
 ################################################################################
 # WEB SERVER
@@ -73,50 +74,20 @@ sudo apt-get install libgtkglext1-dev
 sudo apt-get install v4l-utils
 
 # NumPy, SciPi
-# Needed to use OpenCV 3+ and package is only for 2.4 so had to build from stractch
-# sudo apt-get -y install python-opencv
 sudo pip install scipy
 sudo pip install numpy
 
-# INSTALL OPENCV 3.2
-# This takes 3+ hours. Be patient.
-# https://github.com/Tes3awy/OpenCV-3.2.0-Compiling-on-Raspberry-Pi
-#cd ~
-#wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.2.0.zip
-#wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.2.0.zip
-#unzip opencv.zip
-#unzip opencv_contrib.zip
-#
-#cd opencv-3.2.0
-#mkdir build
-#cd build
-#
-#cmake -D CMAKE_BUILD_TYPE=RELEASE \
-#	-D CMAKE_INSTALL_PREFIX=/usr/local \
-#	-D INSTALL_C_EXAMPLES=OFF \
-#	-D INSTALL_PYTHON_EXAMPLES=ON \
-#	-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.2.0/modules \
-#	-D BUILD_EXAMPLES=ON \
-#	-D ENABLE_NEON=ON ..
-
-# Make it using multiple cores to speed up
-#sudo make -j3
-#sudo make install
-#sudo ldconfig
-
-#echo $'/usr/local/lib\n' > /etc/ld.so.conf.d/opencv.conf
-#echo $'PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig\nexport #PKG_CONFIG_PATH\n' >> /etc/bash.baschrc
-
 # Install OpenCV 3 - this is fully compiled and saves a ton of steps
-# https://github.com/jabelone/OpenCV-for-Pi
+# Code is found here https://github.com/jabelone/OpenCV-for-Pi
 wget "https://github.com/jabelone/OpenCV-for-Pi/raw/master/latest-OpenCV.deb"
 sudo dpkg -i latest-OpenCV.deb
 
-# For fisheye calculations 
+# For fisheye calculations we need this random library
 sudo pip install joblib
 
 # Now restart
 sudo shutdown -r now
+
 # On Raspberry pi to get OpenCV to recognize the PiCam
 sudo modprobe bcm2835-v4l2
 
@@ -139,10 +110,8 @@ sudo apt-get install espeak
 # HEARING SPEECH RECOGNITION
 ################################################################################
 sudo pip install pyaudio
-#Installing build tools and required libraries
 
-sudo apt-get update
-sudo apt-get upgrade
+#Installing required libraries
 sudo apt-get install alsa-utils
 sudo apt-get install alsamixer
 sudo apt-get install bison
@@ -150,6 +119,8 @@ sudo apt-get install libasound2-dev
 sudo apt-get install swig
 sudo apt-get install python-dev
 sudo apt-get install mplayer
+
+# There is no fully built version of sphinx so we have to build our own here
 
 #Building Sphinxbase
 
@@ -230,9 +201,9 @@ set -ex
 # CORE
 ################################################################################
 
-sudo apt-get update
-sudo apt-get upgrade
-sudo rpi-update
+#sudo apt-get update
+#sudo apt-get upgrade
+#sudo rpi-update
 
 sudo pip install python
 
@@ -244,10 +215,12 @@ echo " export PATH=/usr/local/bin:\$PATH"
 echo ""
 read -n1 -r -p "Then press spacebar to continue..."
 
+# Support libs we need
 sudo pip install pyobjc
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
+
 # Help docs in markdown for the API
 sudo pip install gfm
 
@@ -262,11 +235,14 @@ sudo pip install tornado
 # VISION
 ################################################################################
 brew tap homebrew/science
-brew install opencv
+
+# OpenCV 2 which we are not going to use
+# brew install opencv
+
 # Set up paths in python
-cat ~/.bash_profile | grep PYTHONPATH
-ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
-ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
+# cat ~/.bash_profile | grep PYTHONPATH
+# ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
+# ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
 
 # OpenCV 3
 brew cask install cuda
@@ -275,9 +251,10 @@ brew install opencv3 --with-contrib --with-ffmpeg --with-tbb --with-qt5
 # For fisheye calculations 
 sudo pip install joblib
 
-sudo pip install picamera
-sudo pip install numpy
 sudo pip install Pillow
+
+# Math libs for algorithm and matrix control
+sudo pip install numpy
 sudo pip install scipy
 
 
@@ -297,7 +274,7 @@ brew install espeak
 ################################################################################
 # HEARING SPEECH RECOGNITION
 ################################################################################
-sudo pip install pyaudio
+# sudo pip install pyaudio 
 brew install portaudio
 
 # PocketSphinx needs a custom install for latest
