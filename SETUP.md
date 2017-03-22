@@ -5,7 +5,8 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 
 # Raspberry Pi Setup Script
 
-------------------------------------------------------------------------------------------------------
+Below is the bash script which installs everything to set up the Pi environment. As this is a big build script, please try it line by line given things may have changed.
+
 ```sh
 #!/bin/sh
 set -ex
@@ -186,7 +187,7 @@ ctl.!default {
 * To check it, type ```arecord -l``` and make sure it has the "USB" device name there.
 * Set the gain for the microphone with ```alsamixer```. Mine started out at 0 for the USB mic and I had to raise it. I set it to 90 to be very responsive.
 * Test by recording
-*
+
 ------------------------------------------------------------------------------------------------------
 # Mac OSX Setup Script
 To enable easy development, most of the functionality can be executed on a Mac except for the motors which are virtual.
