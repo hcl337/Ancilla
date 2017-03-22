@@ -7,6 +7,10 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 
 ------------------------------------------------------------------------------------------------------
 ```sh
+
+#!/bin/sh
+set -ex
+
 ################################################################################
 # CORE
 ################################################################################
@@ -31,6 +35,8 @@ sudo pip install psutil
 sudo pip install inflection
 # Help docs in markdown for the API
 sudo pip install gfm
+
+sudo pip install psutil
 
 ################################################################################
 # WEB SERVER
