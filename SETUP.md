@@ -7,7 +7,6 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 
 ------------------------------------------------------------------------------------------------------
 ```sh
-
 #!/bin/sh
 set -ex
 
@@ -108,9 +107,13 @@ sudo pip install numpy
 #echo $'/usr/local/lib\n' > /etc/ld.so.conf.d/opencv.conf
 #echo $'PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig\nexport #PKG_CONFIG_PATH\n' >> /etc/bash.baschrc
 
+# Install OpenCV 3 - this is fully compiled and saves a ton of steps
 # https://github.com/jabelone/OpenCV-for-Pi
 wget "https://github.com/jabelone/OpenCV-for-Pi/raw/master/latest-OpenCV.deb"
 sudo dpkg -i latest-OpenCV.deb
+
+# For fisheye calculations 
+sudo pip install joblib
 
 # Now restart
 sudo shutdown -r now
@@ -173,7 +176,7 @@ cd ~/
 export LD_LIBRARY_PATH=/usr/local/lib
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-```sh
+```
 
 ## Additional Setup Steps
 
@@ -182,7 +185,7 @@ You will need to go into the BIOS and enable either the HDMI or 1/8 inch audio o
 
 ```sh
 sudo raspi-config
-```sh
+```
 
 Then go to advanced and set output to audio out rather than HDMI.
 
@@ -192,7 +195,7 @@ Remove alsa-base.conf because Raspbian Jessie does not use it like Wheezy did.
 
 ```sh
 rm /etc/modprobe.d/alsa-base.conf
-```sh
+```
 
 Make the USB microphone default by editing '''/home/pi.asoundrc''' (Create if it doesn't exist). Note that it is a hidden file so if you are using a file browser to open it you need to show hidden files. What you are doing here is setting the index for recording from card 0 to card 1. Card 0 is the internal soundcard which just has audio out.
 
@@ -207,11 +210,6 @@ ctl.!default {
     }
 ```
 
-### HACK to make the Kinobo microphone work
-For the Kinobo USB microphone I got, the first recordings sounded horrible. The reason is it does not work well with USB 2.0 so I had to follow the forum posts and change the USB speed for the whole Pi from 2 to 1.1. THIS IS A HACK! It would be good to get a different USB microphone which doesn't require this.
-
-Open /boot/cmdline.txt and add ```dwc_otg.speed=1``` to make it reset everyting for the pi. Then Reboot.
-
 ### Make sure sound recording works
 
 * To check it, type ```arecord -l``` and make sure it has the "USB" device name there.
@@ -225,6 +223,9 @@ To enable easy development, most of the functionality can be executed on a Mac e
 This takes advantage of brew and pip for most of the tasks.
 
 ```sh
+#!/bin/sh
+set -ex
+
 ################################################################################
 # CORE
 ################################################################################
@@ -267,6 +268,13 @@ cat ~/.bash_profile | grep PYTHONPATH
 ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
 ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
 
+# OpenCV 3
+brew cask install cuda
+brew install opencv3 --with-contrib --with-ffmpeg --with-tbb --with-qt5
+
+# For fisheye calculations 
+sudo pip install joblib
+
 sudo pip install picamera
 sudo pip install numpy
 sudo pip install Pillow
@@ -298,4 +306,5 @@ brew install --HEAD watsonbox/cmu-sphinx/cmu-sphinxbase
 brew install --HEAD watsonbox/cmu-sphinx/cmu-pocketsphinx
 pip install --ignore-installed six
 sudo pip install --upgrade google-api-python-client
-```sh
+
+```
