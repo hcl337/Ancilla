@@ -134,7 +134,7 @@ class Movement:
         updateThread.start()
 
         for servo in self.servoState['servos']:
-          self.setServoAngle(servo, self.servoState['servos'][servo]['resting_angle'], 10)
+          self.setServoAngle(servo, self.servoState['servos'][servo]['resting_angle'], self.servoState['servos'][servo]['max_speed'] * 2/3)
 
 
     isShuttingDown = False

@@ -59,7 +59,7 @@ class HandleSendEnvironmentCamera( AbstractHandler ):
 
     def __loop( self ):
 
-        logger.debug("Sending env frame")
+        #logger.debug("Sending env frame")
         try:
             im = self.AC3.vision.getLatestEnvironmentFrame( )
 

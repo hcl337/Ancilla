@@ -28,7 +28,7 @@ class FaceDetector( ):
     # can't see it. Number from 0.0 to 1.0 but should usually be smaller than the expected size
     # of a face that exists within the frame. If the lens is wide or people are far away then
     # it needs to be further away
-    MIN_FACE_FRAME_PERCENT = 0.1
+    MIN_FACE_FRAME_PERCENT = 0.05
 
     def __init__( self ):
         # Store the detector Haar cascades for frontal and profile faces
@@ -84,13 +84,13 @@ class FaceDetector( ):
         # Now turn them into JSON and rescale them to the full size
         faceList = []
         for (x, y, w, h) in facesFound:
-            newFace = {'x': int(x/FaceDetector.SCALE), 'y': int(y/FaceDetector.SCALE), 'width': int(w/FaceDetector.SCALE), 'height': int(h/FaceDetector.SCALE), 'orientation':'frontal'} 
+            newFace = {'x': int(x/FaceDetector.SCALE), 'y': int(y/FaceDetector.SCALE), 'width': int(w/FaceDetector.SCALE), 'height': int(h/FaceDetector.SCALE), 'orientation':'frontal'}
             if self.shouldAppend(faceList, newFace):
                 faceList.append( newFace )
             else:
                 pass#logger.debug("Got duplicate face. Removed: " + str(newFace) + " Other Faces: " + str(faceList))
         for (x, y, w, h) in facesProfiles:
-            newFace = {'x': int(x/FaceDetector.SCALE), 'y': int(y/FaceDetector.SCALE), 'width': int(w/FaceDetector.SCALE), 'height': int(h/FaceDetector.SCALE), 'orientation':'profile'} 
+            newFace = {'x': int(x/FaceDetector.SCALE), 'y': int(y/FaceDetector.SCALE), 'width': int(w/FaceDetector.SCALE), 'height': int(h/FaceDetector.SCALE), 'orientation':'profile'}
             if self.shouldAppend(faceList, newFace):
                 faceList.append( newFace )
             else:

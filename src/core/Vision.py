@@ -3,6 +3,7 @@ import time
 import logging
 import copy
 import json
+import subprocess
 from threading import Thread
 
 import cv2 as cv
@@ -12,6 +13,9 @@ from vision.FaceRecognizer import FaceRecognizer
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+isRaspberryPi = 'Linux' in os.uname()[0]
+
+    
 class Vision( ):
     '''
     The Eyes class accesses the cameras and sets them up with callbacks
@@ -64,6 +68,10 @@ class Vision( ):
 
         self.timeOfLastVisualUpdate = time.time()
         self.isComputingCoreEnvironment = False
+        
+        if isRaspberryPi:
+            enablePiCamForOpenCVOnRaspPi()
+
 
 
     def enable( self ):
@@ -77,31 +85,58 @@ class Vision( ):
 
         self._isEnabled = True
 
-        self.environmentCamera = cv.VideoCapture(0)
 
-        if not self.environmentCamera.isOpened( ):
-            self.AC3.speech.say("Vision disabled. No environment camera found.")
-            return
-            #raise Exception("Could not open environment camera.")
+        if isRaspberryPi:
+            logger.info("Setting up cameras for Raspberry Pi")
+            devices = getCameraNamesOnRaspPi()
+            
+            if len(devices) == 0:
+                raise Exception("No cameras found on system")
+            elif len(devices) == 1:
+                logger.info("\tOne camera found so setting as environment: " + str(devices))
+                self.environmentCamera = cv.VideoCapture(devices.keys()[0])
+            elif len(devices) > 2:
+                raise Exception("Too many cameras found in system: " + str(devices))
+            else:
+                for i in devices:
+                    # We are using a USB camera for the narrow focus one and picam for the higher
+                    # width one
+                    if 'usb' in  devices[i].lower():
+                        logger.info("Focus Camera Found: " + devices[i])
+                        self.focusCamera = cv.VideoCapture(i)
+                    else:
+                        logger.info("Environment Camera Found: " + devices[i])
+                        self.environmentCamera = cv.VideoCapture(i)
+                
+        else:
+            logger.info("Setting up cameras for Mac")
+            self.environmentCamera = cv.VideoCapture(0)
+            self.focusCamera = None
+            
 
-        
-        self.focusCamera = cv.VideoCapture(0)
 
-        if not self.focusCamera.isOpened( ):
-            self.AC3.speech.say("WARNING: No focus camera found.")
-        
-
-        if self.focusCamera != None:
+        if self.focusCamera != None and self.focusCamera.isOpened():
+            
+            self.focusCamera.set(cv.cv.CV_CAP_PROP_FPS, Vision.FRAME_RATE )
             # Create our thread for updating the focus camera
             updateThread = Thread(target=self.__updateFocusLoop)
             updateThread.setDaemon(True)
             updateThread.start()
+        else:
+            logger.warning("No focus camera found")
+            self.AC3.speech.say("WARNING: No focus camera found.")
+            
 
-        if self.environmentCamera != None:
+        if self.environmentCamera != None and self.environmentCamera.isOpened():
+
+            self.environmentCamera.set(cv.cv.CV_CAP_PROP_FPS, Vision.FRAME_RATE )
             # Create our thread for updating the environment camera
             updateThread = Thread(target=self.__updateEnvironmentLoop)
             updateThread.setDaemon(True)
             updateThread.start()
+        else:
+            logger.warning("No environment camera found")
+            self.AC3.speech.say("Vision disabled. No environment camera found.")
 
         logger.info("Enabled Vision")
 
@@ -138,7 +173,7 @@ class Vision( ):
     def registerFocusFrameListener( self, listener ):
         '''
         Register a listener method who will be called each time
-        a new focus frame is received. It should then call 
+        a new focus frame is received. It should then call
         AC3.vision.getLatestFocusFrame( ) to get the frame
 
         '''
@@ -159,7 +194,7 @@ class Vision( ):
     def registerEnvironmentFrameListener( self, listener ):
         '''
         Register a listener method who will be called each time
-        a new environment frame is received. It should then call 
+        a new environment frame is received. It should then call
         AC3.vision.getLatestEnvironmentFrame( ) to get the frame
         
         '''
@@ -243,7 +278,7 @@ class Vision( ):
         '''
 
         if self.isComputingCoreEnvironment:
-            logger.debug("computingCoreEnvironment: still doing last so skipping")
+            logger.debug("computingCoreEnvironment: still computing last so skipping: " + str(round(time.time() - self.timeOfLastVisualUpdate, 2)) + ' sec')
             return
 
         # If we let it go too fast, we will run out of processor on the machine
@@ -307,19 +342,21 @@ class Vision( ):
     
                 # Active the actual work for updating
                 self.__updateEnvironmentFrame( )
+                
+                #logger.debug("EndTime: " + str(time.time() - startTime))
     
                 # It probably took some time to update, so schedule the next update to be minus
                 # that time
-                sleepAmount = nextUpdate - time.time()
+                #sleepAmount = nextUpdate - time.time()
     
                 # This is just a protection that should never be triggered. If it takes us
                 # waay too long, we need to log it and stop or we will crash the stack
                 #if( sleepAmount < -2*interval ):
                 #    raise Exception( "Camera update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
                 #    self.disable()
-                if sleepAmount < 0: sleepAmount = 1 / 30
+                #if sleepAmount < 0: sleepAmount = 1 / 30
 
-                time.sleep( sleepAmount )
+                #time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False
             self.AC3.reportFatalError( )
@@ -350,19 +387,21 @@ class Vision( ):
     
                 # It probably took some time to update, so schedule the next update to be minus
                 # that time
-                sleepAmount = nextUpdate - time.time()
+                #sleepAmount = nextUpdate - time.time()
     
                 # This is just a protection that should never be triggered. If it takes us
                 # waay too long, we need to log it and stop or we will crash the stack
-                if( sleepAmount < 0 ):
-                    raise Exception( "Camera update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
-                    self.disable()
+                #if( sleepAmount < 0 ):
+                #    raise Exception( "Camera update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
+                #    self.disable()
+                #if sleepAmount < 0: sleepAmount = 1 / 30
 
 
-                time.sleep( sleepAmount )
+                #time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False
             self.AC3.reportFatalError( )
+
 
 
 
@@ -416,6 +455,65 @@ class Vision( ):
                     updateThread.start()
 
 
+
+def enablePiCamForOpenCVOnRaspPi( ):
+    '''
+    The raspberry pi camera is not visible to our system so need to do a hack
+    to add it. Calling this makes it happen.
+    '''
+
+    try:
+        lines = subprocess.check_output('sudo modprobe bcm2835-v4l2'.split() )
+        logger.debug("Enabling raspberry pi camera with ModProbe: " + str(lines))
+    except subprocess.CalledProcessError as e:
+        raise Exception("Could not set up raspberry pi camera with modprobe: " + str(e))
+
+
+
+def getCameraNamesOnRaspPi( ):
+    '''
+    Lists out all of the video devices and parses their names out. Check for USB, etc.
+    
+    Returns a dictionary from device index to human name
+    '''
+    
+    lines = subprocess.Popen('v4l2-ctl --list-devices'.split(), stdout=subprocess.PIPE).communicate()[0]
+
+    lines=lines.split('\n')
+    lines.reverse()
+    
+    devices = {}
+    deviceID = None
+    name = None
+
+    for l in lines:
+        
+        # Some lines have tabs in them
+        l = l.strip()
+    
+        # Remove the empty lines
+        if len(l) == 0:
+            continue
+    
+        # The first line is the ID of the device. Strip it out
+        if '/dev/video' in l:
+            print("Found video device: " + l)
+            # If we have an old device, write it away as it is done
+            if deviceID != None:
+                devices[deviceID] = name
+            # Extract out the ID of this device to store
+            deviceID = int(l.replace('/dev/video',''))
+            # Reset the name
+            name = ''
+        # We got a sub-line for this device with name details
+        else:
+            name = name + " " + l
+    
+    # Once we have looped through all of them, we need toremember the final one
+    if deviceID != None:
+        devices[deviceID] = name
+        
+    return devices
 '''
 logging.basicConfig(level=logging.DEBUG)
 vision = Vision( )
