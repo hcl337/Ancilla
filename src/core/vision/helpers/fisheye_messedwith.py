@@ -10,7 +10,6 @@ import os
 import pickle
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 eps = finfo(np.float).eps
 
@@ -90,10 +89,6 @@ class FishEye(object):
         self._K = np.zeros((3, 3))
         self._D = np.zeros((4, 1))
         self._img_shape = img_shape
-        self._newK = None
-        
-        self._map1 = None
-        self._map2 = None
 
     def calibrate(
         self,
@@ -252,51 +247,71 @@ class FishEye(object):
     def undistort(self, distorted_img, undistorted_size=None, R=np.eye(3), K=None):
         """Undistort an image using the fisheye model"""
 
+        print "distorted image size", distorted_img.shape
 
-        if distorted_img is None:
-            return
+        if K is None:
+            K = self._K
 
-        #print(">>")
-        
         if undistorted_size is None:
             undistorted_size = distorted_img.shape[:2]
-            
-        h, w = undistorted_size[:2]
+
+        h, w = undistorted_size
         
-        # HCL Added - Wanted to zoom out to see the whole image for the fisheye not just the
-        # center part so had to rewrite things. Not clear this is perfect, but it does
-        # zoom out.
-        if K is None:
-            # We want to zoom out and this lets us see the whole image
-            if self._newK is None:
-                new_matrix, roi = cv2.getOptimalNewCameraMatrix( self._K, self._D, (w,h), 1, (w,h))
-                self._newK = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self._K, self._D, (w,h), None, new_matrix, balance=1,fov_scale=1)
-                logger.debug("Computed new matrix for fisheye flattening")
-                
-            K = self._newK
-            
+        print "Initial K\n", self._K
+        print "Initial D\n", self._D
+        print "h ", h
+        print "w ", w
+        #self._D[2] = self._D[3] = .9
 
+        new_matrix, roi = cv2.getOptimalNewCameraMatrix( self._K, self._D, (w,h), 0, (w,h))
+        new_matrix = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self._K, self._D, (w,h), None, new_matrix, balance=1,fov_scale=1)
+        K = new_matrix
+        
+        print "Updated Matrix", new_matrix
+        print "Updated ROI ",roi
+        
+        '''
+        dist = cv2.fisheye.undistortImage(distorted_img, self._K, self._D, None, new_matrix)
+        
+        x,y,w,h = roi
+        
+        print "roi ", roi
+        #dist = dist[y:y+h,x:x+w]
+        return dist
+        
+        '''
+        #print "Updated ROI\n", roi
+        
+        
+        #self._K = K
+        #undistorted_size = roi[2:]
 
-        if self._map1 is None:
-            self._map1, self._map2 = cv2.fisheye.initUndistortRectifyMap(
-                self._K,
-                self._D,
-                R,
-                K,
-                (w,h),#undistorted_size,
-                cv2.CV_16SC2
-            )
-            logger.debug("Computed updated maps for undistort")
+        print "Updated K\n", K
+        #print "Updated ROI\n", roi
+        # Map 1 = x
+        # Map 2 = y
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(
+            self._K, # mtx
+            self._D, # dist
+            R, # None
+            K, # newcameramtx
+            (w,h), #(w,h)
+            cv2.CV_16SC2 #5
+        )
 
         undistorted_img = cv2.remap(
             distorted_img,
-            self._map1,
-            self._map2,
+            map1,
+            map2,
             interpolation=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT
         )
-
+        #x,y,w,h = roi
+        #undistorted_img = undistorted_img[y:y+h, x:x+w]
+        
+        print("Final image size\n", undistorted_img.shape)
         return undistorted_img
+        
 
     def projectPoints(self, object_points=None, skew=0, rvec=None, tvec=None):
         """Projects points using fisheye model.

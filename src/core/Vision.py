@@ -1,4 +1,6 @@
+
 import os
+import glob
 import time
 import logging
 import copy
@@ -7,57 +9,63 @@ import subprocess
 from threading import Thread
 
 import cv2 as cv
+assert cv.__version__[0] == '3', 'The vision module requires opencv version >= 3.0.0 not ' + cv.__version__
 from vision.FaceDetector import FaceDetector
 from vision.FaceRecognizer import FaceRecognizer
+from vision.helpers.fisheye import FishEye
+import vision.helpers.fisheye
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 isRaspberryPi = 'Linux' in os.uname()[0]
 
-    
+VISION_FILE_ROOT = os.path.normpath(os.path.dirname(__file__) )
+environment_camera_dewarp_calib_path =VISION_FILE_ROOT + "/../../parameters/environment_camera_calib/"
+
+
 class Vision( ):
     '''
-    The Eyes class accesses the cameras and sets them up with callbacks
-    so that people can access teh data from them
+    The Vision class accesses the cameras and sets them up with callbacks
+    so that people can access the data from them
     '''
-
-    # OpenCV VideoCapture objects
-    focusCamera = None
-    environmentCamera = None
-
-    # Store the latest frames so that other people can request them
-    latestFocusFrame = None
-    latestEnvironmentFrame = None
-
-    # Private variable specifying if everythign is working
-    _isEnabled = False
 
     # Output update rate. Because we are on a Raspberry Pi, we can't output
     # at a really high rate and expect to process everything
     FRAME_RATE = 5
-
-    # Store all the functions registered as listeners for us
-    focusListeners = []
-    environmentListeners = []
-
-    # List of objects which are currently in view as of the last frame
-    visualObjects = {}
-
-    faceDetector = None
-    faceRecognizer = None
-
-    AC3 = None
-
+    
+    ENV_CAM_FRAME_WIDTH = 1297
+    ENV_CAM_FRAME_HEIGHT = 972
+    
     # Update at a max of 5 hz for our data, not 30 hz
     MIN_TIME_FOR_COMPUTING_VISION = 1 / 5
-
+        
 
     def __init__ ( self, AC3 ):
         '''
         Creates and connects to as many capture devices as possible
         '''
+        global environment_camera_dewarp_calib_path
 
+        # OpenCV VideoCapture objects
+        self.focusCamera = None
+        self.environmentCamera = None
+        self.environmentCameraDeWarper = instantiateFishEye( environment_camera_dewarp_calib_path )
+        
+        # Store the latest frames so that other people can request them
+        self.latestFocusFrame = None
+        self.latestEnvironmentFrame = None
+    
+        # Private variable specifying if everythign is working
+        self._isEnabled = False
+
+        # Store all the functions registered as listeners for us
+        self.focusListeners = []
+        self.environmentListeners = []
+    
+        # List of objects which are currently in view as of the last frame
+        self.visualObjects = {}
+    
         self.faceDetector = FaceDetector()
         self.faceRecognizer = FaceRecognizer()
         self.registerEnvironmentFrameListener( self.computeCoreEnvironment )
@@ -95,6 +103,9 @@ class Vision( ):
             elif len(devices) == 1:
                 logger.info("\tOne camera found so setting as environment: " + str(devices))
                 self.environmentCamera = cv.VideoCapture(devices.keys()[0])
+                #self.environmentCamera.set(cv.CAP_PROP_FRAME_WIDTH, Vision.ENV_CAM_FRAME_WIDTH )
+                #self.environmentCamera.set(cv.CAP_PROP_FRAME_HEIGHT, Vision.ENV_CAM_FRAME_HEIGHT )
+                        
             elif len(devices) > 2:
                 raise Exception("Too many cameras found in system: " + str(devices))
             else:
@@ -103,10 +114,15 @@ class Vision( ):
                     # width one
                     if 'usb' in  devices[i].lower():
                         logger.info("Focus Camera Found: " + devices[i])
-                        self.focusCamera = cv.VideoCapture(i)
+                        #self.focusCamera = cv.VideoCapture(i)
                     else:
                         logger.info("Environment Camera Found: " + devices[i])
                         self.environmentCamera = cv.VideoCapture(i)
+
+            self.environmentCamera.set(cv.CAP_PROP_FRAME_WIDTH, Vision.ENV_CAM_FRAME_WIDTH )
+            self.environmentCamera.set(cv.CAP_PROP_FRAME_HEIGHT, Vision.ENV_CAM_FRAME_HEIGHT )
+                        
+            logger.info("Current frame height: " + str(self.environmentCamera.get(cv.CAP_PROP_FRAME_HEIGHT) ) )
                 
         else:
             logger.info("Setting up cameras for Mac")
@@ -117,7 +133,7 @@ class Vision( ):
 
         if self.focusCamera != None and self.focusCamera.isOpened():
             
-            self.focusCamera.set(cv.cv.CV_CAP_PROP_FPS, Vision.FRAME_RATE )
+            self.focusCamera.set(cv.CAP_PROP_FPS, Vision.FRAME_RATE )
             # Create our thread for updating the focus camera
             updateThread = Thread(target=self.__updateFocusLoop)
             updateThread.setDaemon(True)
@@ -129,7 +145,7 @@ class Vision( ):
 
         if self.environmentCamera != None and self.environmentCamera.isOpened():
 
-            self.environmentCamera.set(cv.cv.CV_CAP_PROP_FPS, Vision.FRAME_RATE )
+            self.environmentCamera.set(cv.CAP_PROP_FPS, Vision.FRAME_RATE )
             # Create our thread for updating the environment camera
             updateThread = Thread(target=self.__updateEnvironmentLoop)
             updateThread.setDaemon(True)
@@ -281,39 +297,42 @@ class Vision( ):
             logger.debug("computingCoreEnvironment: still computing last so skipping: " + str(round(time.time() - self.timeOfLastVisualUpdate, 2)) + ' sec')
             return
 
-        # If we let it go too fast, we will run out of processor on the machine
-        if time.time() - self.timeOfLastVisualUpdate < Vision.MIN_TIME_FOR_COMPUTING_VISION:
-            logger.debug("computingCoreEnvironment: too fast so skipping")
-            return
-
-        self.isComputingCoreEnvironment = True
-        self.timeOfLastVisualUpdate = time.time()
-
-        visualObjects = {}
-
-        img = self.getLatestEnvironmentFrame()
-
-        if img is None or img.shape[0] == 0:
-            logger.debug("Skipping analysis. No image yet.")
-            return
-
-        ##############################
-        # FACE DETECTION
-        visualObjects['faces'] = self.faceDetector.detect( img )
-
-        ##############################
-        # FACE RECOGNITION
-        for f in visualObjects['faces']:
-            regionOfInterest = img[f['y']: f['y'] + f['height'], f['x']: f['x'] + f['width']]
-            # Try to figure out who this is...
-            name = self.faceRecognizer.identifyFace( regionOfInterest )
-            #logger.debug("NAME: " + str(name))
-            f['name'] = name
-
-
-        self.visualObjects = visualObjects
-
-        self.isComputingCoreEnvironment = False
+        try:
+            # If we let it go too fast, we will run out of processor on the machine
+            if time.time() - self.timeOfLastVisualUpdate < Vision.MIN_TIME_FOR_COMPUTING_VISION:
+                logger.debug("computingCoreEnvironment: too fast so skipping")
+                return
+    
+            self.isComputingCoreEnvironment = True
+            self.timeOfLastVisualUpdate = time.time()
+    
+            visualObjects = {}
+    
+            img = self.getLatestEnvironmentFrame()
+            
+            if img is None or img.shape[0] == 0:
+                logger.debug("Skipping analysis. No image yet.")
+                return
+    
+            ##############################
+            # FACE DETECTION
+            visualObjects['faces'] = self.faceDetector.detect( img )
+    
+            ##############################
+            # FACE RECOGNITION
+            for f in visualObjects['faces']:
+                regionOfInterest = img[f['y']: f['y'] + f['height'], f['x']: f['x'] + f['width']]
+                # Try to figure out who this is...
+                name = self.faceRecognizer.identifyFace( regionOfInterest )
+                #logger.debug("NAME: " + str(name))
+                f['name'] = name
+                
+                logger.info("Found " + str(f))
+    
+    
+            self.visualObjects = visualObjects
+        finally:
+            self.isComputingCoreEnvironment = False
 
         #logger.debug("computeCoreEnvironment: execution time: " + str(round(time.time() - self.timeOfLastVisualUpdate, 2) ) + ' sec.')
 
@@ -342,21 +361,7 @@ class Vision( ):
     
                 # Active the actual work for updating
                 self.__updateEnvironmentFrame( )
-                
-                #logger.debug("EndTime: " + str(time.time() - startTime))
-    
-                # It probably took some time to update, so schedule the next update to be minus
-                # that time
-                #sleepAmount = nextUpdate - time.time()
-    
-                # This is just a protection that should never be triggered. If it takes us
-                # waay too long, we need to log it and stop or we will crash the stack
-                #if( sleepAmount < -2*interval ):
-                #    raise Exception( "Camera update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
-                #    self.disable()
-                #if sleepAmount < 0: sleepAmount = 1 / 30
 
-                #time.sleep( sleepAmount )
         except Exception as e:
             self._isEnabled = False
             self.AC3.reportFatalError( )
@@ -381,23 +386,9 @@ class Vision( ):
                 # this again
                 startTime = time.time()
                 nextUpdate = startTime + interval
-    
-                # Active the actual work for updating
-                self.__updateFocusFrame( )
-    
-                # It probably took some time to update, so schedule the next update to be minus
-                # that time
-                #sleepAmount = nextUpdate - time.time()
-    
-                # This is just a protection that should never be triggered. If it takes us
-                # waay too long, we need to log it and stop or we will crash the stack
-                #if( sleepAmount < 0 ):
-                #    raise Exception( "Camera update loop took more time to update than the allowed interval: " + str(interval) + " " +str(sleepAmount) + " " )
-                #    self.disable()
-                #if sleepAmount < 0: sleepAmount = 1 / 30
 
-
-                #time.sleep( sleepAmount )
+                self.__updateFocusFrame()
+                
         except Exception as e:
             self._isEnabled = False
             self.AC3.reportFatalError( )
@@ -439,7 +430,13 @@ class Vision( ):
         if self.environmentCamera != None:
             ret, fullFrame = self.environmentCamera.read()
             if (fullFrame is not None) and (fullFrame.shape[0] > 0):
+
+                #self.latestEnvironmentFrame = self.environmentCameraDeWarper.undistort( fullFrame )
                 self.latestEnvironmentFrame = fullFrame.copy()
+
+                #dewarper needs to be in a separate thread than the trigger loop same in focus frame
+
+                #self.latestEnvironmentFrame = fullFrame.copy()
 
                 for fn in self.environmentListeners:
                     # We don't want our callbacks to get stuck where
@@ -514,6 +511,31 @@ def getCameraNamesOnRaspPi( ):
         devices[deviceID] = name
         
     return devices
+    
+    
+def instantiateFishEye( calib_path, NX=9, NY=6 ):
+    '''
+    Loads the camera image normalization to flatten our wide angle
+    camera
+    '''
+    calib_file  = str(calib_path) + "/camera.calib"
+    
+    if False:#not os.path.isfile( calib_file ):
+
+        imgs_paths = glob.glob(os.path.join(calib_path, '*.jpg'))
+
+        imgs_paths = imgs_paths[0:11]
+        
+        fe = FishEye(nx=NX, ny=NY, verbose=True)
+        
+        rms, K, D, rvecs, tvecs = fe.calibrate( imgs_paths, show_imgs=False)
+        
+        fe.save( calib_file )
+        
+        return fe
+    else:
+        return FishEye.load( calib_file )
+            
 '''
 logging.basicConfig(level=logging.DEBUG)
 vision = Vision( )

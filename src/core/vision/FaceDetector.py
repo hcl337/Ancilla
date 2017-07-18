@@ -67,7 +67,7 @@ class FaceDetector( ):
             scaleFactor=1.1,
             minNeighbors=5,
             minSize=(minSize, minSize),
-            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+            flags=cv2.CASCADE_SCALE_IMAGE
         )
 
         # Now see if we have any side "profile" faces we can find
@@ -77,10 +77,10 @@ class FaceDetector( ):
             scaleFactor=1.1,
             minNeighbors=5,
             minSize=(minSize, minSize),
-            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+            flags=cv2.CASCADE_SCALE_IMAGE
         )
 
-
+        #logger.info( facesProfiles )
         # Now turn them into JSON and rescale them to the full size
         faceList = []
         for (x, y, w, h) in facesFound:

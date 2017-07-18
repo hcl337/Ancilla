@@ -44,8 +44,6 @@ class AC3Server( ):
     Main web server which controls all handlers, websocket, etc
     '''
 
-    AC3 = None
-
     def __init__( self, AC3 ):
 
         logger.info("Creating Web Server...")

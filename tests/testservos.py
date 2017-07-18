@@ -44,15 +44,18 @@ print('Moving servo on channel 0, press Ctrl-C to quit...')
 #while True:
 # Move servo on channel O between extremes.
 #set_servo_pulse(0, 0.5)
-pwm.set_pwm(0, 0, 102)
+a = 4
+
+pwm.set_pwm(a, 0, 102)
 time.sleep(1)
 #set_servo_pulse(0, 2.5)
-pwm.set_pwm(0, 0, 512)
+pwm.set_pwm(a, 0, 512)
 time.sleep(1)
 #set_servo_pulse(0, 1.5)
-pwm.set_pwm(0, 0, 307)
+pwm.set_pwm(a, 0, 307)
 time.sleep(2)
 
+'''
 for i in range(1,4):
   pwm.set_pwm(i, 0, 350)
   time.sleep(1)
@@ -61,3 +64,4 @@ for i in range(1,4):
   pwm.set_pwm(i, 0, 307)
   time.sleep(1)
   # 521, 104, 312
+'''

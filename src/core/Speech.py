@@ -83,7 +83,7 @@ class Speech:
 
 
     def isTalking( self ):
-        return self.phraseQueue.qsize() > 0 or self.currentlySpeaking
+        return self.__isEnabled and (self.phraseQueue.qsize() > 0 or self.currentlySpeaking)
 
 
 
