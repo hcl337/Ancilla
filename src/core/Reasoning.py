@@ -2,6 +2,8 @@ import time
 import sys
 import copy
 import logging
+from random import randint
+from threading import Thread
 logger = logging.getLogger(__name__)
 
 
@@ -115,3 +117,121 @@ class Reasoning:
         else:
         	self.AC3.speech.say( "uh huh.")
 
+    def programmedMoveRobot( self ):
+        # Create our thread
+        updateThread = Thread(target=self.__programmedMoveRobot)
+        # Make sure it dies if the whole app dies
+        updateThread.setDaemon(True)
+        # Need to actually start it running where it calls the update function
+        updateThread.start()
+        
+
+    def __programmedMoveRobot( self ):
+        
+        
+        print("PROGRAMMED MOVE ROBOT")
+        
+        '''
+        # Rotate Head left right
+        self.AC3.movement.setServoAngle('neck_rotate', -90, 30)
+        self.AC3.movement.setServoAngle("head_tilt",-50,50)
+        self.AC3.movement.setServoAngle("eye_rotate",-50,10)
+        time.sleep(3)
+        
+        self.AC3.movement.setServoAngle('neck_rotate', 90, 90)
+        self.AC3.movement.setServoAngle("head_tilt",-50,50)
+        self.AC3.movement.setServoAngle("eye_rotate",50,20)
+        time.sleep(2)
+
+        self.AC3.movement.setServoAngle('neck_rotate', 0, 90)
+        self.AC3.movement.setServoAngle("head_tilt",0,90)
+        self.AC3.movement.setServoAngle("eye_rotate",10,30)
+        
+        # Test Neck - Look Engaged
+        self.AC3.movement.setServoAngle("head_lean",50,50)
+        self.AC3.movement.setServoAngle("neck_lean", 35.50)
+        time.sleep(1)
+
+        # Look around a bit
+        self.AC3.movement.setServoAngle("eye_rotate",5,50)
+        time.sleep(1)
+        self.AC3.movement.setServoAngle("eye_rotate",-15,90)
+        time.sleep(.5)
+        self.AC3.movement.setServoAngle("eye_rotate",20,90)
+        
+        time.sleep(1)
+
+        self.AC3.movement.setServoAngle("eye_rotate",0,90)
+        
+        # Test Neck - Look Scared / worred
+        self.AC3.movement.setServoAngle("head_lean",-50,50)
+        self.AC3.movement.setServoAngle("neck_lean", -50.50)
+        time.sleep(2)
+
+        time.sleep(1)
+        
+
+        self.AC3.movement.setServoAngle("head_lean",50,30)
+        self.AC3.movement.setServoAngle("neck_lean", 45.30)
+        time.sleep(3)
+
+        # Test Eyes
+        self.AC3.movement.setServoAngle("head_tilt",-50,50)
+        self.AC3.movement.setServoAngle("eye_rotate",-50,50)
+        time.sleep(1)
+        self.AC3.movement.setServoAngle("head_tilt", 50.50)
+        self.AC3.movement.setServoAngle("eye_rotate",0,50)
+        time.sleep(1)
+        self.AC3.movement.setServoAngle("head_tilt",0,50)
+        '''
+        
+        for i in range(0, 50):
+            
+
+            
+            # x angle
+            x = randint(-90,90)
+
+            #
+            interest = randint( -20, 20)
+            
+            # Really make it disengage sometimes
+            if interest < -5:
+                interest -= 30
+            if interest > 5:
+                interest += 30
+
+            # y angle
+            y = randint( -20, 30)
+            
+
+            # speed
+            speed = randint(40, 70)
+            
+            # time
+            duration = randint(1,10)
+            
+            logger.info("Moving head: " + str(x) + " " + str(y) + " " + str(interest) + " " + str(speed) + " " + str(duration))
+            
+            
+            # Get everything moving
+            self.AC3.movement.setServoAngle("neck_rotate", x/2, speed)
+            self.AC3.movement.setServoAngle("eye_rotate", -x/2, 90)
+            self.AC3.movement.setServoAngle("head_lean", y + interest, speed)
+            self.AC3.movement.setServoAngle("neck_lean", interest, speed)
+            self.AC3.movement.setServoAngle("head_tilt", randint(-10,10), 50)
+            time.sleep(1)
+
+            self.AC3.movement.setServoAngle("eye_rotate", x/2 + randint(-25,25), 7)
+            self.AC3.movement.setServoAngle("head_tilt", randint(-30,30),32)
+
+            if duration > 6:
+                time.sleep( 4 )
+                duration -= 4
+                self.AC3.movement.setServoAngle("head_tilt", randint(-30,30),20)
+                self.AC3.movement.setServoAngle("eye_rotate", x/2 + randint(-25,25), 20)
+                time.sleep( 2 )
+                self.AC3.movement.setServoAngle("head_tilt", randint(-30,30),10)
+                self.AC3.movement.setServoAngle("eye_rotate", x/2 + randint(-25,25), 7)
+
+            time.sleep(duration)

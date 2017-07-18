@@ -7,7 +7,6 @@ import base64
 import hashlib
 import time
 import json
-import misaka
 import gfm
 from threading import Thread
 import tornado.web
@@ -22,17 +21,17 @@ import RobotWebSocket
 
 # import ServerHelpers which has abstracted out all of our detail stuff to support
 # the web server
-from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME, 
+from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME,
     isLoggedIn, getServerCookie, setServerCookie, clearServerCookie,
     SERVER_PORT, SERVER_FILE_ROOT, DOC_PATH, README_DOC_PATH, ENCRYPTED_PASSWORD )
 
 
 from queryhandlers import IndexHandler
-from queryhandlers import DocsHandler 
-from queryhandlers import LoginHandler 
-from queryhandlers import LogoutHandler 
-from queryhandlers import ShutdownHandler 
-from queryhandlers import SiteHandler 
+from queryhandlers import DocsHandler
+from queryhandlers import LoginHandler
+from queryhandlers import LogoutHandler
+from queryhandlers import ShutdownHandler
+from queryhandlers import SiteHandler
 
 
 logger = logging.getLogger(__name__)
@@ -45,8 +44,6 @@ class AC3Server( ):
     Main web server which controls all handlers, websocket, etc
     '''
 
-    AC3 = None
-
     def __init__( self, AC3 ):
 
         logger.info("Creating Web Server...")
@@ -55,7 +52,7 @@ class AC3Server( ):
 
         self.__tryToShutDownOldServer( )
 
-        # Link up all the handlers 
+        # Link up all the handlers
         self.handlers = [
             (r"/", IndexHandler.IndexHandler), \
             (r"/site", SiteHandler.SiteHandler),\
@@ -78,7 +75,7 @@ class AC3Server( ):
 
         Because we are multi-threaded, we could accidentally have this happen a lot.
         
-        ''' 
+        '''
         try:
             serverAlive = True
             while serverAlive:
@@ -131,7 +128,7 @@ class AC3Server( ):
             client = RobotWebSocket.clients[clientName]
             logger.debug("Shutting down handlers for: " + client.uniqueClientToken)
             client.stopHandlingMessages()
-            try: 
+            try:
                 message = { "type": "SHUTDOWN", "reason": "server disabled"}
                 RobotWebSocket.client.write_message( message )
             except: pass

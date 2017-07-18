@@ -1,4 +1,4 @@
-Language model created by QuickLM on Fri Mar 10 12:09:11 EST 2017
+Language model created by QuickLM 
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -412,3 +412,4 @@ ngram 3=151
 -0.3010 YOUR NAME </s>
 
 \end\
+

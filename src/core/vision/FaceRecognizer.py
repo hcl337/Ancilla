@@ -23,7 +23,7 @@ class FaceRecognizer( ):
             raise Exception("Can' not find face recognizer descriptor! File: " + recogPath )
 
         # Load the face recognizer
-        self.alg = cv.createLBPHFaceRecognizer()
+        self.alg = cv.face.createLBPHFaceRecognizer()
         self.alg.load(recogPath)
 
         # Load the file which correlates the index of the face to the name
@@ -39,8 +39,11 @@ class FaceRecognizer( ):
 
         gray = cv.cvtColor(regionOfInterest, cv.COLOR_BGR2GRAY)
 
-        nbr_predicted, conf = self.alg.predict(gray)
-
+        result = cv.face.MinDistancePredictCollector( )
+        self.alg.predict(gray)
+        nbr_predicted = result.getLabel()
+        conf = result.getDist()
+        
         # If we don't have concidence, don't tell us who it is... we don't know
         if conf > 40:
             return None

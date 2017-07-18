@@ -65,7 +65,7 @@ class HandleSendFocusCamera( AbstractHandler ):
                 return
 
             cnt = cv.imencode('.jpg',im)[1]
-            b64 = base64.encodestring(cnt)        
+            b64 = base64.encodestring(cnt)
 
             message = {
                 "type": "FOCUS_CAMERA_FRAME",

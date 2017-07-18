@@ -34,13 +34,6 @@ class AC3:
     also be passed around for each sub-unit to use to reference the other units cleanly.
     '''
 
-    speech = None
-    movement = None
-    expression = None
-    vision = None
-    hearing = None
-    reasoning = None
-    server = None
 
     def __init__( self ):
         ################################################################################
@@ -48,6 +41,14 @@ class AC3:
         # so we want to find errors first
         ################################################################################
 
+        self.speech = None
+        self.movement = None
+        self.expression = None
+        self.vision = None
+        self.hearing = None
+        self.reasoning = None
+        self.server = None
+        
         logger.info("################################################################################")
         logger.info("################################################################################")
         logger.info("")
@@ -59,7 +60,7 @@ class AC3:
 
 
         yappi.start()
-        atexit.register(self.triggerOnExit)  
+        atexit.register(self.triggerOnExit)
 
         try:
             startTime = time.time( )
@@ -69,7 +70,7 @@ class AC3:
             logger.info("")
             logger.info("######################################## SPEECH")
             self.speech = Speech( self )
-            self.speech.enable( )
+            #self.speech.enable( )
             #self.speech.say( "Speech Enabled" )
             #self.speech.say( "Booting AC-3 Operating system." )
             
@@ -78,21 +79,21 @@ class AC3:
             logger.info("")
             logger.info("######################################## EXPRESSION")
             self.expression = Expression( self )
-            self.expression.enable( )
+            #self.expression.enable( )
             #self.speech.say( "Expressions")
     
             logger.info("")
             logger.info("")
             logger.info("######################################## VISION")
             self.vision = Vision( self )
-            self.vision.enable( )
+            #self.vision.enable( )
             #self.speech.say( "Vision")
     
             logger.info("")
             logger.info("")
             logger.info("######################################## HEARING")
             self.hearing = Hearing( self )
-            self.hearing.enable( )
+            #self.hearing.enable( )
             
             logger.info("")
             logger.info("")
@@ -120,10 +121,13 @@ class AC3:
         if self.speech:
             while( self.speech.isTalking() ):
                 time.sleep(0.1)
+                logger.info("  Still talking...")
 
         endTime = time.time()
 
 
+
+        logger.info("######################################## PREPARING")
         # If we didn't crash, report that we are ready to go
         if self.isRunning( ):
             if self.speech:
@@ -146,6 +150,8 @@ class AC3:
         # from the running time
         yappi.clear_stats()
         yappi.start()
+        
+        self.reasoning.programmedMoveRobot()
 
 
     # This makes sure we don't try to shut down multiple times

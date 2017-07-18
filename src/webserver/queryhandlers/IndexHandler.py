@@ -17,7 +17,9 @@ import json
 import time
 import BaseHandler
 from .. import ServerHelpers
-#from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME, 
+import psutil
+
+#from ServerHelpers import (BaseHandler, displayRequestDetails, SERVER_COOKIE_NAME,
 #    isLoggedIn, getServerCookie, setServerCookie, clearServerCookie,
 #    SERVER_PORT, SERVER_FILE_ROOT, DOC_PATH, README_DOC_PATH, ENCRYPTED_PASSWORD )
 from .. import RobotWebSocket
@@ -30,7 +32,7 @@ startTime = time.time()
 
 class IndexHandler(BaseHandler.BaseHandler):
     '''
-    Return status=logged in if user has been logged in or 401 if they 
+    Return status=logged in if user has been logged in or 401 if they
     are not logged in.
     '''
     @ServerHelpers.isLoggedIn()
@@ -57,6 +59,10 @@ class IndexHandler(BaseHandler.BaseHandler):
             if token in client:
                 numConnectionsForCookie += 1
 
+        vm = psutil.virtual_memory()
+        mem = 100 - round(100 * vm.available / vm.total, 2);
+        
         timeAlive = str(elapsed_hours) + "h " + str(elapsed_min) + "m " + str(elapsed_sec) + "s"
-        s = {"status":"logged in", "docs":docURL, "booted": startupTime, "uptime": timeAlive, 'your_connections': numConnectionsForCookie, 'total_connections':len(RobotWebSocket.clients)}
+        
+        s = {"status":"logged in", "docs":docURL, "booted": startupTime, "uptime": timeAlive, 'cpu_usage':psutil.cpu_percent(), 'mem_usage':mem, 'your_connections': numConnectionsForCookie, 'total_connections':len(RobotWebSocket.clients)}
         self.write(s)

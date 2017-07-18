@@ -22,9 +22,6 @@ MIN_TIME_AFTER_I_SPEAK_TO_LISTEN = 3
 
 class Hearing( ):
 
-    hearingProcess = None
-    callbacks = []
-    AC3 = None
 
 
     def __init__( self, AC3 ):
@@ -35,6 +32,8 @@ class Hearing( ):
         updatesphinxvocabulary.updateVocabulary()
 
         self.AC3 = AC3
+        self.hearingProcess = None
+        self.callbacks = []
 
         # Register so if we exit for any reason, this will disable the
         # thread and try to guarantee an exit

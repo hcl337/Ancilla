@@ -5,12 +5,17 @@ Setting up the system fully takes a few hours to complete the installs. Below is
 
 # Raspberry Pi Setup Script
 
-------------------------------------------------------------------------------------------------------
+Below is the bash script which installs everything to set up the Pi environment. As this is a big build script, please try it line by line given things may have changed.
+
 ```sh
+#!/bin/sh
+set -ex
+
 ################################################################################
 # CORE
 ################################################################################
 
+# Standard updates to a linux system and install python stuff
 sudo apt-get update
 sudo apt-get upgrade
 sudo rpi-update
@@ -26,9 +31,11 @@ echo " export PATH=/usr/local/bin:\$PATH"
 echo ""
 read -n1 -r -p "Then press spacebar to continue..."
 
+# Core util stuff to add
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
+
 # Help docs in markdown for the API
 sudo pip install gfm
 
@@ -48,10 +55,12 @@ sudo apt-get -y install build-essential git cmake pkg-config
 sudo apt-get -y install libjpeg-dev libtiff-dev libjasper-dev libpng-dev
 
 # Video Libs
-sudo apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev
 
 # UI Libs
 sudo apt-get -y install libgtk2.0-dev
+
+# Libs to Optimize OpenCV functions
 sudo apt-get -y install libatlas-base-dev gfortran
 
 # Pi Camera Interface
@@ -60,10 +69,28 @@ sudo pip install picamera
 # Python image manipulation
 sudo pip install Pillow
 
-# OpenCV, NumPy, SciPi
-sudo apt-get -y install python-opencv
+# Other
+sudo apt-get install default-jdk ant
+sudo apt-get install libgtkglext1-dev
+sudo apt-get install v4l-utils
+
+# NumPy, SciPi
 sudo pip install scipy
 sudo pip install numpy
+
+# Install OpenCV 3 - this is fully compiled and saves a ton of steps
+# Code is found here https://github.com/jabelone/OpenCV-for-Pi
+wget "https://github.com/jabelone/OpenCV-for-Pi/raw/master/latest-OpenCV.deb"
+sudo dpkg -i latest-OpenCV.deb
+
+# For fisheye calculations we need this random library
+sudo pip install joblib
+
+# Now restart
+sudo shutdown -r now
+
+# On Raspberry pi to get OpenCV to recognize the PiCam
+sudo modprobe bcm2835-v4l2
 
 
 ################################################################################
@@ -84,10 +111,8 @@ sudo apt-get install espeak
 # HEARING SPEECH RECOGNITION
 ################################################################################
 sudo pip install pyaudio
-#Installing build tools and required libraries
 
-sudo apt-get update
-sudo apt-get upgrade
+#Installing required libraries
 sudo apt-get install alsa-utils
 sudo apt-get install alsamixer
 sudo apt-get install bison
@@ -95,6 +120,8 @@ sudo apt-get install libasound2-dev
 sudo apt-get install swig
 sudo apt-get install python-dev
 sudo apt-get install mplayer
+
+# There is no fully built version of sphinx so we have to build our own here
 
 #Building Sphinxbase
 
@@ -121,7 +148,7 @@ cd ~/
 export LD_LIBRARY_PATH=/usr/local/lib
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-```sh
+```
 
 ## Additional Setup Steps
 
@@ -130,7 +157,7 @@ You will need to go into the BIOS and enable either the HDMI or 1/8 inch audio o
 
 ```sh
 sudo raspi-config
-```sh
+```
 
 Then go to advanced and set output to audio out rather than HDMI.
 
@@ -140,7 +167,7 @@ Remove alsa-base.conf because Raspbian Jessie does not use it like Wheezy did.
 
 ```sh
 rm /etc/modprobe.d/alsa-base.conf
-```sh
+```
 
 Make the USB microphone default by editing '''/home/pi.asoundrc''' (Create if it doesn't exist). Note that it is a hidden file so if you are using a file browser to open it you need to show hidden files. What you are doing here is setting the index for recording from card 0 to card 1. Card 0 is the internal soundcard which just has audio out.
 
@@ -155,17 +182,12 @@ ctl.!default {
     }
 ```
 
-### HACK to make the Kinobo microphone work
-For the Kinobo USB microphone I got, the first recordings sounded horrible. The reason is it does not work well with USB 2.0 so I had to follow the forum posts and change the USB speed for the whole Pi from 2 to 1.1. THIS IS A HACK! It would be good to get a different USB microphone which doesn't require this.
-
-Open /boot/cmdline.txt and add ```dwc_otg.speed=1``` to make it reset everyting for the pi. Then Reboot.
-
 ### Make sure sound recording works
 
 * To check it, type ```arecord -l``` and make sure it has the "USB" device name there.
 * Set the gain for the microphone with ```alsamixer```. Mine started out at 0 for the USB mic and I had to raise it. I set it to 90 to be very responsive.
 * Test by recording
-*
+
 ------------------------------------------------------------------------------------------------------
 # Mac OSX Setup Script
 To enable easy development, most of the functionality can be executed on a Mac except for the motors which are virtual.
@@ -173,13 +195,16 @@ To enable easy development, most of the functionality can be executed on a Mac e
 This takes advantage of brew and pip for most of the tasks.
 
 ```sh
+#!/bin/sh
+set -ex
+
 ################################################################################
 # CORE
 ################################################################################
 
-sudo apt-get update
-sudo apt-get upgrade
-sudo rpi-update
+#sudo apt-get update
+#sudo apt-get upgrade
+#sudo rpi-update
 
 sudo pip install python
 
@@ -191,10 +216,12 @@ echo " export PATH=/usr/local/bin:\$PATH"
 echo ""
 read -n1 -r -p "Then press spacebar to continue..."
 
+# Support libs we need
 sudo pip install pyobjc
 sudo pip install requests
 sudo pip install psutil
 sudo pip install inflection
+
 # Help docs in markdown for the API
 sudo pip install gfm
 
@@ -209,15 +236,26 @@ sudo pip install tornado
 # VISION
 ################################################################################
 brew tap homebrew/science
-brew install opencv
-# Set up paths in python
-cat ~/.bash_profile | grep PYTHONPATH
-ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
-ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
 
-sudo pip install picamera
-sudo pip install numpy
+# OpenCV 2 which we are not going to use
+# brew install opencv
+
+# Set up paths in python
+# cat ~/.bash_profile | grep PYTHONPATH
+# ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv.py cv.py
+# ln -s /usr/local/Cellar/opencv/2.4.10/lib/python2.7/site-packages/cv2.so cv2.so
+
+# OpenCV 3
+brew cask install cuda
+brew install opencv3 --with-contrib --with-ffmpeg --with-tbb --with-qt5
+
+# For fisheye calculations 
+sudo pip install joblib
+
 sudo pip install Pillow
+
+# Math libs for algorithm and matrix control
+sudo pip install numpy
 sudo pip install scipy
 
 
@@ -237,7 +275,7 @@ brew install espeak
 ################################################################################
 # HEARING SPEECH RECOGNITION
 ################################################################################
-sudo pip install pyaudio
+# sudo pip install pyaudio 
 brew install portaudio
 
 # PocketSphinx needs a custom install for latest
@@ -246,4 +284,5 @@ brew install --HEAD watsonbox/cmu-sphinx/cmu-sphinxbase
 brew install --HEAD watsonbox/cmu-sphinx/cmu-pocketsphinx
 pip install --ignore-installed six
 sudo pip install --upgrade google-api-python-client
-```sh
+
+```
