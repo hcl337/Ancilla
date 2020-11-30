@@ -2,8 +2,6 @@
 
 > def: a person whose work provides necessary support to the primary activities of an organization, institution, or industry.
 
-![Robot Head Image](https://dl.dropboxusercontent.com/u/14833653/robothead.jpg "Robot Head")
-
 ------------------------------------------------------------------------------------------------------
 ## Project Goal
 
